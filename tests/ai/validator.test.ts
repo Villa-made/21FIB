@@ -150,6 +150,23 @@ Deno.test('validateVisionEvidence sends the T02 model, image bytes, and server-b
   assertStringIncludes(received?.system ?? '', 'RECYCLING');
 });
 
+Deno.test('validateVisionEvidence preserves every valid provider decision from the internal contract', async () => {
+  const input = {
+    actionType: 'LITTER_COLLECTION' as const,
+    description: 'Residuos recogidos junto a una papelera.',
+    originalImageBytes: new Uint8Array([0xff, 0xd8, 0xff, 0xe0]),
+  };
+
+  for (const decision of ['APPROVED', 'NEEDS_EVIDENCE', 'REJECTED'] as const) {
+    const result = await validateVisionEvidence(
+      input,
+      async () => JSON.stringify({ decision, reason: `Resultado ${decision}.` }),
+    );
+
+    assertEquals(result, { decision, reason: `Resultado ${decision}.` });
+  }
+});
+
 Deno.test('buildCloudflareVisionMessages uses the T02-verified text-plus-file image shape', () => {
   const image = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
   const messages = buildCloudflareVisionMessages({
