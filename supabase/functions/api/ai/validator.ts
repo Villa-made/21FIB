@@ -92,8 +92,20 @@ export function classifyProviderStatus(status: number): ProviderTechnicalError {
   return new ProviderTechnicalError('UNAVAILABLE');
 }
 
+function providerStatusFromException(error: unknown): number | null {
+  if (typeof error !== 'object' || error === null) return null;
+
+  const candidate = error as { status?: unknown; statusCode?: unknown };
+  if (typeof candidate.statusCode === 'number') return candidate.statusCode;
+  if (typeof candidate.status === 'number') return candidate.status;
+  return null;
+}
+
 /** Network and abort errors are technical failures and can never approve evidence. */
 export function classifyProviderException(error: unknown): ProviderTechnicalError {
+  const status = providerStatusFromException(error);
+  if (status !== null) return classifyProviderStatus(status);
+
   if (
     error instanceof DOMException && error.name === 'AbortError' ||
     error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')

@@ -106,6 +106,12 @@ Deno.test('classifyProviderException turns timeout and arbitrary upstream errors
   assertEquals(unavailable.message.includes(secret), false);
 });
 
+Deno.test('classifyProviderException preserves safe classifications for SDK HTTP status errors', () => {
+  assertEquals(classifyProviderException({ statusCode: 403 }).kind, 'UNAUTHORIZED');
+  assertEquals(classifyProviderException({ status: 429 }).kind, 'RATE_LIMITED');
+  assertEquals(classifyProviderException({ statusCode: 504 }).kind, 'TIMEOUT');
+});
+
 Deno.test('detectImageMediaType recognizes the approved JPEG, PNG, and WebP byte signatures', () => {
   assertEquals(detectImageMediaType(new Uint8Array([0xff, 0xd8, 0xff, 0xe0])), 'image/jpeg');
   assertEquals(
