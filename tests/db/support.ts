@@ -46,18 +46,22 @@ export interface TestUser {
 export class TestFixtures {
   readonly db = serviceClient();
   private users: TestUser[] = [];
+  private passwords = new Map<string, string>();
+  private objects: { bucket: string; path: string }[] = [];
 
   /** Creates an auth user (admin API, confirmed, random @example.test email) and its profile. */
   async createUser(alias: string = `EcoTest${randomSuffix()}`): Promise<TestUser & { alias: string }> {
     const email = `t01b-${randomSuffix()}@example.test`;
+    const password = crypto.randomUUID();
     const { data, error } = await this.db.auth.admin.createUser({
       email,
-      password: crypto.randomUUID(),
+      password,
       email_confirm: true,
     });
     if (error || !data.user) throw new Error(`createUser failed: ${error?.message}`);
     const user = { id: data.user.id, email };
     this.users.push(user);
+    this.passwords.set(user.id, password);
     const { error: profileError } = await this.db.from('profiles').insert({
       user_id: user.id,
       alias,
@@ -65,6 +69,22 @@ export class TestFixtures {
     });
     if (profileError) throw new Error(`profile insert failed: ${profileError.message}`);
     return { ...user, alias };
+  }
+
+  /** Real session of a fixture user: signInWithPassword through an anon-key client (needs Auth captcha off). */
+  async signInAs(user: TestUser): Promise<SupabaseClient> {
+    const client = anonClient();
+    const { error } = await client.auth.signInWithPassword({
+      email: user.email,
+      password: this.passwords.get(user.id) ?? '',
+    });
+    if (error) throw new Error(`signInWithPassword failed: ${error.message}`);
+    return client;
+  }
+
+  /** Registers a Storage object created by a test so `cleanup()` removes it. */
+  trackObject(bucket: string, path: string): void {
+    this.objects.push({ bucket, path });
   }
 
   /** Inserts the real INE municipality used by tests; never deleted. */
@@ -94,6 +114,10 @@ export class TestFixtures {
 
   /** Deletes contributions (FK has no cascade) and then auth users (profiles/likes cascade). */
   async cleanup(): Promise<void> {
+    for (const { bucket, path } of this.objects) {
+      await this.db.storage.from(bucket).remove([path]);
+    }
+    this.objects = [];
     for (const user of this.users) {
       await this.db.from('contributions').delete().eq('author_id', user.id);
       await this.db.auth.admin.deleteUser(user.id);
