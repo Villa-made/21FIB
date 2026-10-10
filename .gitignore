@@ -28,4 +28,5 @@ package-lock.json
 .env*
 !.env.example
 
-tests/ai/*
+# Keep self-owned spike fixtures local, but retain the Markdown evidence record.
+tests/ai/private-fixtures/
