@@ -1,4 +1,27 @@
-import type { ActionType, ValidationInput } from '../domain/contracts.ts';
+import type { ActionType, ValidationInput, ValidationResult } from '../domain/contracts.ts';
+import { detectImageMediaType, parseValidationResult, type ImageMediaType } from './schema.ts';
+
+/** The T02-validated Workers AI vision model. */
+export const CLOUDFLARE_VISION_MODEL = '@cf/google/gemma-4-26b-a4b-it';
+
+/**
+ * Supplied by server-only composition. This module never reads browser-visible
+ * configuration and must never log either value.
+ */
+export interface CloudflareVisionCredentials {
+  accountId: string;
+  apiToken: string;
+}
+
+export interface VisionInferenceRequest {
+  model: typeof CLOUDFLARE_VISION_MODEL;
+  system: string;
+  user: string;
+  image: Uint8Array;
+  mediaType: ImageMediaType;
+}
+
+export type VisionTextExecutor = (request: VisionInferenceRequest) => Promise<string>;
 
 export interface ValidationMessages {
   system: string;
@@ -69,4 +92,77 @@ export function classifyProviderException(error: unknown): ProviderTechnicalErro
   }
 
   return new ProviderTechnicalError('UNAVAILABLE');
+}
+
+/**
+ * Executes one multimodal validation and accepts only the internal result
+ * contract. It has no persistence, scoring, or contribution-state authority.
+ */
+export async function validateVisionEvidence(
+  input: ValidationInput,
+  execute: VisionTextExecutor,
+): Promise<ValidationResult> {
+  const mediaType = detectImageMediaType(input.originalImageBytes);
+  if (mediaType === null) throw new ProviderTechnicalError('UNAVAILABLE');
+
+  const messages = buildValidationMessages(input);
+
+  let raw: string;
+  try {
+    raw = await execute({
+      model: CLOUDFLARE_VISION_MODEL,
+      system: messages.system,
+      user: messages.user,
+      image: input.originalImageBytes,
+      mediaType,
+    });
+  } catch (error) {
+    if (error instanceof ProviderTechnicalError) throw error;
+    throw classifyProviderException(error);
+  }
+
+  const result = parseValidationResult(raw);
+  if (result === null) throw new ProviderTechnicalError('UNAVAILABLE');
+  return result;
+}
+
+/**
+ * Creates the server-side Workers AI executor used by validateVisionEvidence.
+ * The official provider accepts Uint8Array image parts for REST-backed calls:
+ * https://github.com/cloudflare/ai/tree/main/packages/workers-ai-provider
+ */
+export function createCloudflareVisionExecutor(
+  credentials: CloudflareVisionCredentials,
+): VisionTextExecutor {
+  return async (request) => {
+    // Deferred imports keep unit tests provider-free; this path executes only
+    // in the trusted server composition that supplies the credentials.
+    const [{ generateText }, { createWorkersAI }] = await Promise.all([
+      import('npm:ai@7.0.137'),
+      import('npm:workers-ai-provider@4.0.0'),
+    ]);
+    const workersAi = createWorkersAI({
+      accountId: credentials.accountId,
+      apiKey: credentials.apiToken,
+    });
+
+    try {
+      const { text } = await generateText({
+        model: workersAi(request.model),
+        messages: [
+          { role: 'system', content: request.system },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: request.user },
+              { type: 'image', image: request.image },
+            ],
+          },
+        ],
+      });
+      return text;
+    } catch (error) {
+      throw classifyProviderException(error);
+    }
+  };
 }

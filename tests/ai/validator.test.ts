@@ -4,6 +4,9 @@ import {
   buildValidationMessages,
   classifyProviderException,
   classifyProviderStatus,
+  CLOUDFLARE_VISION_MODEL,
+  type VisionInferenceRequest,
+  validateVisionEvidence,
 } from '../../supabase/functions/api/ai/validator.ts';
 
 Deno.test('parseValidationResult accepts an exact approved result and normalizes its reason', () => {
@@ -119,3 +122,62 @@ Deno.test('detectImageMediaType rejects unrecognized or truncated evidence bytes
   assertEquals(detectImageMediaType(new Uint8Array([0xff, 0xd8])), null);
   assertEquals(detectImageMediaType(new Uint8Array([0x47, 0x49, 0x46, 0x38])), null);
 });
+
+Deno.test('validateVisionEvidence sends the T02 model, image bytes, and server-built text to its executor', async () => {
+  let received: VisionInferenceRequest | undefined;
+  const image = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+
+  const result = await validateVisionEvidence(
+    {
+      actionType: 'RECYCLING',
+      description: 'Botella de plástico en el contenedor amarillo.',
+      originalImageBytes: image,
+    },
+    async (request) => {
+      received = request;
+      return '{"decision":"APPROVED","reason":"Envase y contenedor coherentes."}';
+    },
+  );
+
+  assertEquals(result, {
+    decision: 'APPROVED',
+    reason: 'Envase y contenedor coherentes.',
+  });
+  assertEquals(received?.model, CLOUDFLARE_VISION_MODEL);
+  assertEquals(received?.image, image);
+  assertEquals(received?.mediaType, 'image/jpeg');
+  assertStringIncludes(received?.system ?? '', 'RECYCLING');
+});
+
+Deno.test('validateVisionEvidence makes malformed output, unsupported bytes, and provider errors technical failures', async () => {
+  const validInput = {
+    actionType: 'LITTER_COLLECTION' as const,
+    description: 'Recogida de residuos.',
+    originalImageBytes: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  };
+
+  for (const execute of [
+    async () => 'not-json',
+    async () => {
+      throw new Error('upstream error with no decision');
+    },
+  ]) {
+    await assertRejectsProviderFailure(() => validateVisionEvidence(validInput, execute));
+  }
+
+  await assertRejectsProviderFailure(() =>
+    validateVisionEvidence(
+      { ...validInput, originalImageBytes: new Uint8Array([0x47, 0x49, 0x46]) },
+      async () => '{"decision":"APPROVED","reason":"No debe ejecutarse"}',
+    )
+  );
+});
+
+async function assertRejectsProviderFailure(operation: () => Promise<unknown>) {
+  try {
+    await operation();
+    throw new Error('Expected ProviderTechnicalError');
+  } catch (error) {
+    assertEquals(error instanceof Error && error.name, 'ProviderTechnicalError');
+  }
+}
