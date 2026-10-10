@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Camera, ImageIcon } from 'lucide-react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { demoImageFor } from '../../assets/demoImages'
 import { useAuth } from '../identity/AuthPage'
 import { setLastContributionId } from '../shell/lastContribution'
 import {
@@ -215,31 +216,30 @@ export default function ContributionForm() {
             <p className="text-xs font-mono-tech text-[#12D6B0]">04 · CAPTURA</p>
             <div className="rounded-2xl bg-[#0D1612] border border-[#1D3026] overflow-hidden">
               <div className="relative aspect-[4/3] bg-[#13201A] bg-sensor-grid">
-                {previewUrl ? (
-                  <>
-                    <img
-                      src={previewUrl}
-                      alt="Vista previa de evidencia"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-3 pointer-events-none border border-[#22D3EE]/40">
-                      <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#22D3EE]" />
-                      <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#22D3EE]" />
-                      <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#22D3EE]" />
-                      <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#22D3EE]" />
-                    </div>
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <span className="inline-block px-2 py-1 rounded bg-[#070D0A]/85 text-[10px] font-mono-tech text-[#22D3EE] border border-white/10">
-                        Evidencia privada hasta aprobación · {captureOrigin}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[#98ABA2]">
-                    <Camera className="w-8 h-8 opacity-60" />
-                    <p className="text-xs font-mono-tech">Sin captura óptica</p>
-                  </div>
-                )}
+                <img
+                  src={
+                    previewUrl ??
+                    demoImageFor(
+                      actionType === 'LITTER_COLLECTION' ? 'LITTER_COLLECTION' : 'RECYCLING',
+                      actionType,
+                    )
+                  }
+                  alt={previewUrl ? 'Vista previa de evidencia' : 'Ejemplo demo de captura'}
+                  className={`w-full h-full object-cover ${previewUrl ? '' : 'opacity-50'}`}
+                />
+                <div className="absolute inset-3 pointer-events-none border border-[#22D3EE]/40">
+                  <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#22D3EE]" />
+                  <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#22D3EE]" />
+                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#22D3EE]" />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#22D3EE]" />
+                </div>
+                <div className="absolute bottom-3 left-3 right-3">
+                  <span className="inline-block px-2 py-1 rounded bg-[#070D0A]/85 text-[10px] font-mono-tech text-[#22D3EE] border border-white/10">
+                    {previewUrl
+                      ? `Evidencia privada hasta aprobación · ${captureOrigin}`
+                      : 'Demo · captura tu propia evidencia'}
+                  </span>
+                </div>
               </div>
               <div className="p-4 flex flex-wrap gap-2">
                 <label className="min-h-[44px] px-4 rounded-xl bg-[#13201A] border border-[#1D3026] hover:border-[#7CE83A]/40 text-xs font-medium text-[#F0F5F2] inline-flex items-center gap-2 cursor-pointer">
