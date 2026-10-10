@@ -17,7 +17,7 @@ erDiagram
 | Tabla | Clave/campos esenciales | Regla |
 |---|---|---|
 | `profiles` | `user_id uuid PK/FK auth.users`, `alias text UNIQUE` (normalización sin distinguir mayúsculas), `adult_declared_at timestamptz NOT NULL`, `created_at` | El email/password permanece en Supabase Auth; alias público |
-| `municipalities` | `code text PK`, `name`, `province_name` | Catálogo oficial de municipios de España importado desde fuente INE; no se inventan códigos |
+| `municipalities` | `code text PK`, `name`, `province_name` | Catálogo oficial de municipios de España importado desde fuente INE; no se inventan códigos. En la beta solo se cargan los municipios de la provincia de Barcelona (CPRO 08). |
 | `contributions` | `id uuid PK`, `author_id FK`, `action_type`, `description`, `municipality_code FK`, `evidence_path`, `public_photo_path NULL`, `capture_origin`, `capture_exif_at NULL`, `status`, `points_snapshot`, `submitted_at`, `approved_at NULL`, `hidden_at NULL`, `ai_reason NULL`, `validation_version integer`, `processing_lease_until NULL`, `idempotency_key` | Un envío lógico, una aprobación como máximo; tiempo y puntos snapshot inmutables |
 | `likes` | `user_id FK`, `contribution_id FK`, `created_at`, PK compuesto (`user_id`, `contribution_id`) | Un Me gusta por usuario/contribución; no propio |
 | `reports` | `id uuid PK`, `contribution_id FK`, `reason`, `created_at`, `reviewed_at NULL`, `resolution NULL` | Denuncia anónima, datos mínimos, solo administración puede consultar todas |
