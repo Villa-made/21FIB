@@ -125,6 +125,19 @@ export interface ProvideEvidenceRequest {
   captureOrigin: CaptureOrigin;
 }
 
+// ---- Municipalities (§4) ---------------------------------------------------------
+
+export interface MunicipalityDto {
+  code: string;
+  name: string;
+  provinceName: string;
+}
+
+export interface MunicipalitiesResponse {
+  items: MunicipalityDto[];
+  nextCursor: null;
+}
+
 // ---- Feed and leaderboard (§4) ---------------------------------------------
 
 export interface FeedItemDto {

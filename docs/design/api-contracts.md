@@ -136,6 +136,14 @@ El campo `imageUrl` es una ruta **relativa a la base de la API**, no al origen d
 { "items": [{ "rank": 1, "userId": "<uuid>", "alias": "EcoUsuario", "points": 30 }], "nextCursor": null }
 ```
 
+**Municipios:** `GET /municipalities?q=&limit=`
+
+```json
+{ "items": [{ "code": "08019", "name": "Barcelona", "provinceName": "Barcelona" }], "nextCursor": null }
+```
+
+`q` es obligatorio y debe tener al menos 2 caracteres tras `trim` (si no, `400 INVALID_REQUEST` con `details.field = "q"`). `limit` va de 1 a 50 (por defecto 20; fuera de rango o no numérico, `400 INVALID_REQUEST` con `details.field = "limit"`). La búsqueda no distingue mayúsculas ni acentos, se aplica al nombre (y al prefijo del código si `q` son solo dígitos) y el orden es alfabético. `nextCursor` es siempre `null`: no hay paginación.
+
 **Denuncia:** `POST /reports`:
 
 ```json
