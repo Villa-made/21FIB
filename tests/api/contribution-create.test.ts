@@ -317,7 +317,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: 'production handler fails closed without an EXIF inspector and creates no row',
+  name: 'production handler rejects malformed image bytes and creates no row',
   ignore,
   fn: () =>
     withScenario(async ({ fixtures, h, userId, token }) => {
@@ -327,8 +327,8 @@ Deno.test({
         key: crypto.randomUUID(),
         body: createBody(photoPath),
       });
-      assertEquals(res.status, 500);
-      assertEquals((await errorOf(res)).code, 'INTERNAL');
+      assertEquals(res.status, 422);
+      assertEquals((await errorOf(res)).code, 'UNSUPPORTED_MEDIA');
       assertEquals(await countRows(fixtures, userId), 0);
     }),
 });

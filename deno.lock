@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@cross/image@0.4.3": "0.4.3",
     "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "npm:@eslint/js@^10.0.1": "10.0.1_eslint@10.12.0",
@@ -25,6 +26,9 @@
     "npm:vitest@^3.2.4": "3.2.7_@types+node@24.19.1"
   },
   "jsr": {
+    "@cross/image@0.4.3": {
+      "integrity": "35de7afd2b3ea800dad368ff364e735f66b2719dbd053084fa42b0d233e3492c"
+    },
     "@std/assert@1.0.19": {
       "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
       "dependencies": [
