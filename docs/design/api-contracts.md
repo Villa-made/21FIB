@@ -172,11 +172,13 @@ interface ValidationResult { decision: Decision; reason: string; }
 | `409` | `COOLDOWN_ACTIVE` | Último aprobado enviado hace < 60 min; `details.retryAt` |
 | `409` | `INVALID_STATE` | Reintento/ocultación/cancelación fuera de estado permitido |
 | `409` | `IDEMPOTENCY_CONFLICT` | Misma clave, payload diferente |
+| `413` | `IMAGE_TOO_LARGE` | `sizeBytes` supera 5 MB |
 | `422` | `EXIF_REQUIRED` | Galería sin EXIF válido; pedir cámara |
 | `422` | `INVALID_ALIAS` | Alias inválido después de aplicar `trim` |
 | `422` | `ADULT_DECLARATION_REQUIRED` | `adultDeclared` ausente o distinto de `true` |
 | `422` | `PHOTO_TOO_OLD` | EXIF anterior a 60 min o futuro |
 | `422` | `INVALID_MUNICIPALITY` | Código no existe en catálogo cargado |
+| `422` | `UNSUPPORTED_MEDIA` | `contentType` no es JPEG, PNG ni WebP |
 | `503` | `AI_UNAVAILABLE` | Proveedor no disponible (en reintento se refleja también en estado) |
 
 **Contrato entre agentes:** interfaz común y esquemas de DTO en un único lugar; frontend nunca infiere puntos del tipo para agregarlos al ranking; solo renderiza la respuesta. Las rutas anteriores son la **versión 1** y cualquier cambio de semántica requiere actualizar este documento y criterios de aceptación antes de implementar.
