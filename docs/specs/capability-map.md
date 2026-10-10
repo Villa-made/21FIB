@@ -36,7 +36,7 @@
 |---|---|---|
 | `identity` | 26, 27, 29, 65, 66; 28 **solo email + contraseña** | 28 (Google y Apple), 47–49 (eliminación/recuperación automatizadas) |
 | `ai-validation` | 03, 04, 18, 21 (versión mínima de dictamen); 91 **adaptado a procesamiento simplificado** | 57–58 (audio), 89–90 (reintentos avanzados), 91 (ejecución asíncrona robusta) |
-| `contributions` | 02, 05, 09, 10–11, 14, 18–25, 36, 42–44, 45 (ocultación con revocación), 75, 77, 88 (cancelación) | 46 (política completa de retención), 60–62 (administración/versión de catálogo) |
+| `contributions` | 02, 05, 09, 10–11, 14, 18–25, 36, 42–44, 45 (ocultación con revocación), 75 y 77 adaptados: solo provincia de Barcelona, 88 (cancelación) | 46 (política completa de retención), 60–62 (administración/versión de catálogo) |
 | `scoring` | 05, 36, 45 (revocación) y ranking **global histórico** (adaptación de 06–08, 37–41) | rankings locales, municipales, semanales, mensuales, desempates (06–08, 37–41, 83–87) |
 | `community` | 15, 26, 30, 34, 45 (ocultación por autor), 78–82 **solo feed global**, 54–55 **denuncia mínima** | feed local, moderación completa (12–13, 50–56), perfil/historial completo |
 

@@ -30,7 +30,7 @@ Registro, login y logout **a través de Supabase Auth SDK**, sin endpoints REST 
 | `POST` | `/contributions/{id}/hide` | Autor | Solo `APPROVED` visible; `hiddenAt`, puntos efectivos 0; idempotente |
 | `GET` | `/feed` | Público | Feed visible, últimos 30 días, likes ↓, paginado |
 | `GET` | `/leaderboard` | Público | Ranking global histórico por puntos ↓ |
-| `GET` | `/municipalities?q=` | Público | Códigos/nombres INE para selección manual |
+| `GET` | `/municipalities?q=` | Público | Códigos/nombres INE para selección manual; en la beta, solo la provincia de Barcelona |
 | `PUT` | `/contributions/{id}/like` | Usuario | Crea Me gusta propio si publicación es ajena y visible; idempotente |
 | `DELETE` | `/contributions/{id}/like` | Usuario | Elimina Me gusta propio; idempotente |
 | `POST` | `/reports` | Público | Denuncia con motivo y token Turnstile validado en servidor; `202` |

@@ -13,6 +13,7 @@ Registrar una acción medioambiental con fotografía y descripción, identificar
 
 - **CON-01:** Solo un usuario autenticado puede crear una contribución; se exige tipo permitido, descripción no vacía, una imagen y municipio español seleccionado (RQ-02, 14, 18, 20, 26, 75, 77).
 - **CON-02:** El municipio se guarda mediante código identificador INE si el catálogo está disponible; la declaración manual prevalece y no se comprueba con GPS (RQ-09, 44, 77). **Adaptación a confirmar:** el GPS puede omitirse en la beta.
+  **Adaptación beta (2026-10-10):** el catálogo cargado se limita a los 311 municipios de la provincia de Barcelona (INE, CPRO 08); ampliar a toda España (RQ-75) consiste en regenerar el catálogo sin filtro.
 - **CON-03:** Se registra en servidor una fecha UTC inmutable y se conserva el valor de puntos correspondiente al tipo de acción en el momento del envío (RQ-05, 23, 36, 60).
 - **CON-04:** Estados mínimos: `PENDING` → `APPROVED` / `NEEDS_EVIDENCE` / `REJECTED` / `TECHNICAL_ERROR`. Solo `APPROVED` puede entrar en el feed y puntuación (RQ-03–04).
 - **CON-05:** No se publicará automáticamente una imagen recibida antes de aprobación. La descripción aprobada no se editará desde la interfaz (RQ-15, 59).
