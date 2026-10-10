@@ -1,5 +1,5 @@
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
-import { parseValidationResult } from '../../supabase/functions/api/ai/schema.ts';
+import { detectImageMediaType, parseValidationResult } from '../../supabase/functions/api/ai/schema.ts';
 import {
   buildValidationMessages,
   classifyProviderException,
@@ -100,4 +100,22 @@ Deno.test('classifyProviderException turns timeout and arbitrary upstream errors
   const unavailable = classifyProviderException(new Error(secret));
   assertEquals(unavailable.kind, 'UNAVAILABLE');
   assertEquals(unavailable.message.includes(secret), false);
+});
+
+Deno.test('detectImageMediaType recognizes the approved JPEG, PNG, and WebP byte signatures', () => {
+  assertEquals(detectImageMediaType(new Uint8Array([0xff, 0xd8, 0xff, 0xe0])), 'image/jpeg');
+  assertEquals(
+    detectImageMediaType(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+    'image/png',
+  );
+  assertEquals(
+    detectImageMediaType(new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50])),
+    'image/webp',
+  );
+});
+
+Deno.test('detectImageMediaType rejects unrecognized or truncated evidence bytes', () => {
+  assertEquals(detectImageMediaType(new Uint8Array()), null);
+  assertEquals(detectImageMediaType(new Uint8Array([0xff, 0xd8])), null);
+  assertEquals(detectImageMediaType(new Uint8Array([0x47, 0x49, 0x46, 0x38])), null);
 });
