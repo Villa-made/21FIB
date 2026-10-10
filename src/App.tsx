@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import AuthPage, { AuthProvider, useAuth } from './features/identity/AuthPage'
 
 const shell: CSSProperties = {
   minHeight: '100svh',
@@ -71,6 +72,25 @@ const mobileNav: CSSProperties = {
   borderTop: '1px solid #e7e5e4',
   background: '#fff',
   paddingBottom: 'env(safe-area-inset-bottom)',
+}
+
+const linkBtn: CSSProperties = {
+  borderRadius: '0.5rem',
+  padding: '0.4rem 0.75rem',
+  background: '#16a34a',
+  color: '#fff',
+  fontWeight: 700,
+  textDecoration: 'none',
+  fontSize: '0.875rem',
+}
+
+const ghostBtn: CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  color: '#57534e',
+  cursor: 'pointer',
+  fontSize: '0.875rem',
+  padding: '0.35rem 0.5rem',
 }
 
 const NAV = [
@@ -145,13 +165,35 @@ function ContributePlaceholder() {
   )
 }
 
-function AuthPlaceholder() {
-  return (
-    <Provisional title="Acceso">
-      Registro y login con email/contraseña, alias y declaración ≥18 (T05). Auth
-      vía Supabase; perfil vía API v1.
-    </Provisional>
-  )
+function HeaderAuth() {
+  const { status, profile, signOut } = useAuth()
+  if (status === 'ready' && profile) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+        <span style={{ fontWeight: 600, maxWidth: '9rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          @{profile.alias}
+        </span>
+        <button type="button" style={ghostBtn} onClick={() => void signOut()}>
+          Salir
+        </button>
+      </div>
+    )
+  }
+  if (status === 'needs-profile') {
+    return (
+      <Link to="/acceso" style={{ ...linkBtn, background: '#f59e0b', color: '#78350f' }}>
+        Completa tu perfil
+      </Link>
+    )
+  }
+  if (status === 'anonymous') {
+    return (
+      <Link to="/acceso" style={linkBtn}>
+        Entrar
+      </Link>
+    )
+  }
+  return null
 }
 
 function ShellLayout() {
@@ -173,6 +215,7 @@ function ShellLayout() {
             </NavLink>
           ))}
         </nav>
+        <HeaderAuth />
       </header>
 
       <main style={main}>
@@ -180,7 +223,7 @@ function ShellLayout() {
           <Route index element={<FeedPlaceholder />} />
           <Route path="ranking" element={<RankingPlaceholder />} />
           <Route path="contribuir" element={<ContributePlaceholder />} />
-          <Route path="acceso" element={<AuthPlaceholder />} />
+          <Route path="acceso" element={<AuthPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
@@ -202,5 +245,9 @@ function ShellLayout() {
 }
 
 export default function App() {
-  return <ShellLayout />
+  return (
+    <AuthProvider>
+      <ShellLayout />
+    </AuthProvider>
+  )
 }

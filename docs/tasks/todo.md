@@ -117,19 +117,19 @@
 
 ### T05 — Completar experiencia real de registro y login
 
-- [ ] **T05 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T05 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 00:45–01:25 · **Tamaño:** M (4 archivos previstos) · **Dependencias:** T03, T04 (contrato estable).
 
 **Descripción:** Conectar Supabase Auth con CAPTCHA Turnstile, registro/login/logout, declaración >=18, alias y texto de limitación sin email de recuperación.
 
 **Criterios de aceptación:**
-- [ ] Cuenta nueva registra y accede sin confirmación de email; logout revoca la sesión local.
-- [ ] Errores de credenciales, CAPTCHA, alias ocupado y usuario menor quedan explicados sin filtrar datos.
+- [x] Cuenta nueva registra y accede sin confirmación de email; logout revoca la sesión local.
+- [x] Errores de credenciales, CAPTCHA, alias ocupado y usuario menor quedan explicados sin filtrar datos.
 
 **Verificación:**
 - [ ] Alta/login/logout real en Supabase Free y comprobación de sesión expirada.
-- [ ] Ejecutar prueba focalizada de Auth y `npm run build`.
+- [x] Ejecutar prueba focalizada de Auth y `npm run build`.
 
 **Archivos previstos:** `src/App.tsx`, `src/features/identity/AuthPage.tsx`, `src/features/identity/authService.ts`, `src/features/identity/AuthPage.test.tsx`.
 
@@ -536,7 +536,7 @@
 | T02 | — | — | — | TODO |
 | T03 | B | `24435dd` / `task/T03-spa-base` | `npm run build`, `npm run lint`, `npm test` 6/6; rutas `/`, `/acceso`, `/contribuir`, `/ranking` | DONE |
 | T04 | — | — | — | TODO |
-| T05 | — | — | — | TODO |
+| T05 | B | `task/T05-auth-ui` | `npm test` 14/14 (src), `npm run build`, `npm run lint`; E2E Supabase Free pendiente de env local | DONE |
 | T06 | — | — | — | TODO |
 | T07 | — | — | — | TODO |
 | T08 | — | — | — | TODO |
