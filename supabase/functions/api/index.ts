@@ -2,6 +2,7 @@ import { ERROR_CODES } from './domain/contracts.ts';
 import { createSupabaseTokenVerifier } from './domain/auth.ts';
 import { createServiceClient } from './domain/db.ts';
 import { ApiError, corsHeaders, httpError, parseAllowedOrigins, withCors } from './domain/http.ts';
+import { evidenceInspector } from './media/evidence.ts';
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.117.3';
 import {
   type EvidenceInspector,
@@ -68,6 +69,7 @@ const productionRoutes: Route[] = [
   ...profileRoutes(productionDeps),
   ...uploadRoutes(productionDeps),
   ...municipalityRoutes(productionDeps),
+  ...contributionRoutes({ ...productionDeps, inspector: evidenceInspector }),
   ...publicReadRoutes(productionDeps),
   ...mediaRoutes(productionDeps),
   ...contributionRoutes({
