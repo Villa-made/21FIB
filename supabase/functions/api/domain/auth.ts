@@ -8,16 +8,16 @@ export interface TokenVerifier {
 }
 
 /**
- * Verifies Supabase Auth access tokens with getClaims(token) and derives identity from `sub`.
- * getClaims verifies against cached JWKS for asymmetric keys and asks Auth for symmetric keys.
- * Source: https://supabase.com/docs/reference/javascript/auth-getclaims
+ * Verifies Supabase Auth access tokens with getUser(token) and derives identity from `user.id`.
+ * getUser asks Auth, so it detects sessions that were revoked after the JWT was issued.
+ * Source: https://supabase.com/docs/guides/auth/server-side/advanced-guide
  */
 export function createSupabaseTokenVerifier(): TokenVerifier {
   return {
     async verify(token: string): Promise<{ userId: string } | null> {
       try {
-        const { data, error } = await createServiceClient().auth.getClaims(token);
-        const userId = data?.claims?.sub;
+        const { data, error } = await createServiceClient().auth.getUser(token);
+        const userId = data?.user?.id;
         return error || typeof userId !== 'string' || userId.length === 0 ? null : { userId };
       } catch {
         return null;

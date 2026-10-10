@@ -123,7 +123,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: 'informative: global logout with a retained access token',
+  name: 'global logout invalidates a retained access token',
   ignore,
   fn: async () => {
     const fixtures = new TestFixtures();
@@ -135,8 +135,7 @@ Deno.test({
       const { error } = await client.auth.signOut({ scope: 'global' });
       if (error) throw new Error(`global sign-out failed: ${error.message}`);
       const response = await request('GET', '/profiles/me', session.access_token);
-      assert([200, 401].includes(response.status));
-      console.log(`informative global logout retained-token status: ${response.status}`);
+      await errorCode(response, 401, 'AUTH_REQUIRED');
     } finally {
       await fixtures.cleanup();
     }
