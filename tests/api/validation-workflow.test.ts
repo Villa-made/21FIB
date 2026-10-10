@@ -216,11 +216,11 @@ Deno.test('repository throws on load and on markTechnicalError -> still TECHNICA
   assertEquals(await runValidation(ID, 1, ports), 'TECHNICAL_ERROR');
 });
 
-Deno.test('complete throws after upload -> copy removed, TECHNICAL_ERROR', async () => {
+Deno.test('complete throws after upload -> copy kept (DB may have approved), TECHNICAL_ERROR', async () => {
   const { ports, calls } = setup();
   ports.repository.complete = () => Promise.reject(new Error('rpc failed'));
   assertEquals(await runValidation(ID, 1, ports), 'TECHNICAL_ERROR');
-  assertEquals(calls.remove, [`${ID}/1`]);
+  assertEquals(calls.remove.length, 0);
 });
 
 Deno.test('validator returning an unknown decision is a technical error', async () => {

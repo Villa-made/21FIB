@@ -2,7 +2,16 @@ import { ERROR_CODES } from './domain/contracts.ts';
 import { createSupabaseTokenVerifier } from './domain/auth.ts';
 import { createServiceClient } from './domain/db.ts';
 import { ApiError, corsHeaders, httpError, parseAllowedOrigins, withCors } from './domain/http.ts';
-import type { EvidenceInspector } from './domain/ports.ts';
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.117.3';
+import {
+  type EvidenceInspector,
+  type EvidenceSanitizer,
+  type EvidenceValidator,
+  supabaseEvidenceStorage,
+  supabasePublishedStorage,
+  supabaseValidationRepository,
+} from './domain/ports.ts';
+import type { ValidationPorts } from './domain/validation-workflow.ts';
 import { contributionRoutes } from './routes/contributions.ts';
 import { municipalityRoutes } from './routes/municipalities.ts';
 import { profileRoutes } from './routes/profiles.ts';
@@ -31,11 +40,36 @@ const failClosedInspector: EvidenceInspector = {
   },
 };
 
+// Temporal hasta T06/T09 de C (ai/validator.ts, media/): fallan cerrado. Cada validación acaba en
+// TECHNICAL_ERROR, nunca en APPROVED. Se sustituyen en T13.d; jamás por un validador que apruebe.
+const failClosedValidator: EvidenceValidator = {
+  validate() {
+    return Promise.reject(new Error('AI validator not available'));
+  },
+};
+const failClosedSanitizer: EvidenceSanitizer = {
+  sanitize() {
+    return Promise.reject(new Error('Image sanitizer not available'));
+  },
+};
+
+const productionValidationPorts = (db: SupabaseClient): ValidationPorts => ({
+  repository: supabaseValidationRepository(db),
+  evidenceStorage: supabaseEvidenceStorage(db),
+  publishedStorage: supabasePublishedStorage(db),
+  validator: failClosedValidator,
+  sanitizer: failClosedSanitizer,
+});
+
 const productionRoutes: Route[] = [
   ...profileRoutes(productionDeps),
   ...uploadRoutes(productionDeps),
   ...municipalityRoutes(productionDeps),
-  ...contributionRoutes({ ...productionDeps, inspector: failClosedInspector }),
+  ...contributionRoutes({
+    ...productionDeps,
+    inspector: failClosedInspector,
+    validationPorts: productionValidationPorts,
+  }),
 ];
 
 export function createHandler(routes: Route[]): (req: Request) => Promise<Response> {
