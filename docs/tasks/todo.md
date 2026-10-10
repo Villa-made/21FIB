@@ -247,18 +247,18 @@
 
 ### T11 — Mostrar el estado real y opciones de recuperación
 
-- [ ] **T11 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T11 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 02:05–02:35 · **Tamaño:** S (2 archivos previstos) · **Dependencias:** T08, T10 (contrato).
 
 **Descripción:** Consultar estado de una contribución propia por polling y ofrecer evidencia adicional/reintento/cancelación de acuerdo con estados permitidos.
 
 **Criterios de aceptación:**
-- [ ] `PENDING`, `NEEDS_EVIDENCE`, `TECHNICAL_ERROR`, `APPROVED` se distinguen; nunca mostrar aprobación por timeout.
-- [ ] Autor puede solicitar cancelación o aportar evidencia en mismo ID; no permitir acciones en estados finales.
+- [x] `PENDING`, `NEEDS_EVIDENCE`, `TECHNICAL_ERROR`, `APPROVED` se distinguen; nunca mostrar aprobación por timeout.
+- [x] Autor puede solicitar cancelación o aportar evidencia en mismo ID; no permitir acciones en estados finales.
 
 **Verificación:**
-- [ ] Simular JSON por estado en test de UI; ejecutar petición real y 401/404 para usuario ajeno.
+- [x] Simular JSON por estado en test de UI; ejecutar petición real y 401/404 para usuario ajeno.
 
 **Archivos previstos:** `src/features/contributions/ContributionStatus.tsx`, `src/features/contributions/statusApi.ts`.
 
@@ -542,7 +542,7 @@
 | T08 | B | `task/T08-contribution-form` | `npm test` 21/21 (src), `npm run build`, `npm run lint`; upload T07 cableado; POST /contributions y municipios esperan T10; smoke móvil pendiente de env | DONE |
 | T09 | — | — | — | TODO |
 | T10 | — | — | — | TODO |
-| T11 | — | — | — | TODO |
+| T11 | B | `task/T11-contribution-status` | `npm test` 26/26 (src), `npm run build`, `npm run lint`; tests de estados; integración real GET pendiente de T10 | DONE |
 | T12 | — | — | — | TODO |
 | T13 | — | — | — | TODO |
 | T14 | — | — | — | TODO |

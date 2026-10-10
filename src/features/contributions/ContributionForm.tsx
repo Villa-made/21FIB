@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../identity/AuthPage'
 import {
   clearIdempotencyKey,
@@ -74,36 +74,6 @@ const infoBox: CSSProperties = {
   background: '#f0fdf4',
   color: '#166534',
   fontSize: '0.85rem',
-}
-
-function ContributionStatusStub({ id }: { id: string }) {
-  return (
-    <section style={card}>
-      <h1 style={{ margin: 0, fontSize: '1.35rem' }}>Envío registrado</h1>
-      <p style={hint}>
-        Estado pendiente de validación. El seguimiento detallado llegará en T11.
-        El cliente no otorga puntos.
-      </p>
-      <p style={{ margin: 0, fontFamily: 'ui-monospace, monospace', fontSize: '0.85rem' }}>
-        ID: {id}
-      </p>
-      <Link to="/contribuir" style={{ ...btnGhost, textDecoration: 'none', display: 'inline-block' }}>
-        Nueva contribución
-      </Link>
-    </section>
-  )
-}
-
-export function ContributionStatusPage() {
-  const { status } = useAuth()
-  const { id = '' } = useParams()
-  if (status === 'loading') {
-    return <p style={{ textAlign: 'center', color: '#78716c' }}>Cargando…</p>
-  }
-  if (status !== 'ready') {
-    return <Navigate to="/acceso" replace state={{ from: `/contribuciones/${id}` }} />
-  }
-  return <ContributionStatusStub id={id} />
 }
 
 export default function ContributionForm() {
