@@ -71,19 +71,19 @@
 
 ### T03 — Levantar una SPA navegable y compilable
 
-- [ ] **T03 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T03 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 00:15–00:45 · **Tamaño:** M (5 archivos previstos) · **Dependencias:** T00.
 
 **Descripción:** Preparar scaffold único React/Vite/TS, navegación base y cliente HTTP que respete la API v1, sin tocar contratos de servidor.
 
 **Criterios de aceptación:**
-- [ ] La app permite navegar entre acceso, contribución, feed y ranking con contenido provisional claramente señalado.
-- [ ] El build y navegación móvil básica funcionan; los mocks no pueden activar puntos en producción.
+- [x] La app permite navegar entre acceso, contribución, feed y ranking con contenido provisional claramente señalado.
+- [x] El build y navegación móvil básica funcionan; los mocks no pueden activar puntos en producción.
 
 **Verificación:**
-- [ ] `npm run build` y `npm run lint` si scripts están implementados; registrar comando realmente ejecutado.
-- [ ] Comprobar manualmente las cuatro rutas/pantallas.
+- [x] `npm run build` y `npm run lint` si scripts están implementados; registrar comando realmente ejecutado.
+- [x] Comprobar manualmente las cuatro rutas/pantallas.
 
 **Archivos previstos:** `package.json`, `index.html`, `tsconfig.json`, `vite.config.ts`, `src/main.tsx`.
 
@@ -534,7 +534,7 @@
 | T00 | — | — | — | TODO |
 | T01 | — | — | — | TODO |
 | T02 | — | — | — | TODO |
-| T03 | — | — | — | TODO |
+| T03 | B | `24435dd` / `task/T03-spa-base` | `npm run build`, `npm run lint`, `npm test` 6/6; rutas `/`, `/acceso`, `/contribuir`, `/ranking` | DONE |
 | T04 | — | — | — | TODO |
 | T05 | — | — | — | TODO |
 | T06 | — | — | — | TODO |
