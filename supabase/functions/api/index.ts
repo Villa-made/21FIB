@@ -3,6 +3,7 @@ import { createSupabaseTokenVerifier } from './domain/auth.ts';
 import { createServiceClient } from './domain/db.ts';
 import { ApiError, corsHeaders, httpError, parseAllowedOrigins, withCors } from './domain/http.ts';
 import { profileRoutes } from './routes/profiles.ts';
+import { uploadRoutes } from './routes/uploads.ts';
 
 // Supabase keeps the function name in the path: a call to
 // https://<project>.supabase.co/functions/v1/api/v1/... reaches this function as /api/v1/...
@@ -17,10 +18,11 @@ export interface Route {
 }
 
 // Dependencies remain lazy: createServiceClient() reads secrets only inside route handlers.
-const productionRoutes: Route[] = profileRoutes({
-  verifier: createSupabaseTokenVerifier(),
-  db: createServiceClient,
-});
+const productionDeps = { verifier: createSupabaseTokenVerifier(), db: createServiceClient };
+const productionRoutes: Route[] = [
+  ...profileRoutes(productionDeps),
+  ...uploadRoutes(productionDeps),
+];
 
 export function createHandler(routes: Route[]): (req: Request) => Promise<Response> {
   const compiled = routes.map((r) => ({
