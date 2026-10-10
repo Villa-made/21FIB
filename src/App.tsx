@@ -1,5 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import ContributionForm, {
+  ContributionStatusPage,
+} from './features/contributions/ContributionForm'
 import AuthPage, { AuthProvider, useAuth } from './features/identity/AuthPage'
 
 const shell: CSSProperties = {
@@ -156,15 +159,6 @@ function RankingPlaceholder() {
   )
 }
 
-function ContributePlaceholder() {
-  return (
-    <Provisional title="Contribuir">
-      Formulario de reciclaje / recogida (foto, municipio INE, descripción). Se
-      conectará en T08; el cliente nunca otorga puntos.
-    </Provisional>
-  )
-}
-
 function HeaderAuth() {
   const { status, profile, signOut } = useAuth()
   if (status === 'ready' && profile) {
@@ -222,7 +216,8 @@ function ShellLayout() {
         <Routes>
           <Route index element={<FeedPlaceholder />} />
           <Route path="ranking" element={<RankingPlaceholder />} />
-          <Route path="contribuir" element={<ContributePlaceholder />} />
+          <Route path="contribuir" element={<ContributionForm />} />
+          <Route path="contribuciones/:id" element={<ContributionStatusPage />} />
           <Route path="acceso" element={<AuthPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

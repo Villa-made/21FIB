@@ -182,15 +182,15 @@
 
 ### T08 — Enviar una contribución desde la interfaz
 
-- [ ] **T08 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T08 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 01:25–02:05 · **Tamaño:** M (4 archivos previstos) · **Dependencias:** T03, T07 (contrato).
 
 **Descripción:** Mostrar acción, foto cámara/galería, municipio INE, descripción y envío con clave de idempotencia estable por intención.
 
 **Criterios de aceptación:**
-- [ ] Datos y archivo se envían al backend sin agregar puntos en cliente.
-- [ ] Conflictos de cooldown, EXIF/imagen inválida y contribución pendiente se presentan claramente.
+- [x] Datos y archivo se envían al backend sin agregar puntos en cliente.
+- [x] Conflictos de cooldown, EXIF/imagen inválida y contribución pendiente se presentan claramente.
 
 **Verificación:**
 - [ ] Prueba en navegador móvil para cámara y galería; request real con JWT y clave reutilizada en reintento.
@@ -539,7 +539,7 @@
 | T05 | B | `task/T05-auth-ui` | `npm test` 14/14 (src), `npm run build`, `npm run lint`; E2E Supabase Free pendiente de env local | DONE |
 | T06 | — | — | — | TODO |
 | T07 | — | — | — | TODO |
-| T08 | — | — | — | TODO |
+| T08 | B | `task/T08-contribution-form` | `npm test` 21/21 (src), `npm run build`, `npm run lint`; upload T07 cableado; POST /contributions y municipios esperan T10; smoke móvil pendiente de env | DONE |
 | T09 | — | — | — | TODO |
 | T10 | — | — | — | TODO |
 | T11 | — | — | — | TODO |
