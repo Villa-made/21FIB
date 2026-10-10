@@ -52,6 +52,7 @@ export const ERROR_CODES = {
   UNSUPPORTED_MEDIA: 'UNSUPPORTED_MEDIA',
   PHOTO_NOT_FOUND: 'PHOTO_NOT_FOUND',
   PHOTO_ALREADY_USED: 'PHOTO_ALREADY_USED',
+  CANNOT_LIKE_OWN: 'CANNOT_LIKE_OWN',
   AI_UNAVAILABLE: 'AI_UNAVAILABLE',
 } as const;
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
@@ -123,6 +124,12 @@ export interface ContributionDto {
 export interface ProvideEvidenceRequest {
   photoPath: string;
   captureOrigin: CaptureOrigin;
+}
+
+// PUT/DELETE /contributions/{id}/like (§4)
+export interface LikeResponse {
+  liked: boolean;
+  likeCount: number;
 }
 
 // ---- Municipalities (§4) ---------------------------------------------------------

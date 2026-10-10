@@ -261,6 +261,8 @@ export function mapCommandRpcError(error: RpcError): Error {
         return new ApiError(409, ERROR_CODES.INVALID_STATE, 'La aportación no está en un estado que lo permita');
       case 'INVALID_REQUEST':
         return new ApiError(400, ERROR_CODES.INVALID_REQUEST, 'Solicitud inválida');
+      case 'CANNOT_LIKE_OWN':
+        return new ApiError(403, ERROR_CODES.CANNOT_LIKE_OWN, 'No puedes dar Me gusta a tu propia publicación');
     }
   }
   if (
