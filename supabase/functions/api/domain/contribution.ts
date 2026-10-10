@@ -9,7 +9,10 @@ import {
   type ActionType,
   type CaptureOrigin,
   type CreateContributionRequest,
+  type ContributionDto,
+  type ContributionStatus,
   type CreateContributionResponse,
+  type ProvideEvidenceRequest,
 } from './contracts.ts';
 import { ApiError } from './http.ts';
 import type { EvidenceInspector, EvidenceStorage } from './ports.ts';
@@ -48,6 +51,22 @@ export function parseCreateContribution(body: unknown, userId: string): CreateCo
   if (typeof input.municipalityCode !== 'string' || !MUNICIPALITY.test(input.municipalityCode)) {
     throw new ApiError(422, ERROR_CODES.INVALID_MUNICIPALITY, 'Municipio inválido', { field: 'municipalityCode' });
   }
+  const { photoPath, captureOrigin } = parseEvidenceFields(input, userId);
+
+  return {
+    actionType: input.actionType as ActionType,
+    description,
+    municipalityCode: input.municipalityCode,
+    photoPath,
+    captureOrigin,
+  };
+}
+
+/** Shared by create and evidence: capture origin and the private staging path owned by the user. */
+function parseEvidenceFields(
+  input: Record<string, unknown>,
+  userId: string,
+): ProvideEvidenceRequest {
   if (
     typeof input.captureOrigin !== 'string' ||
     !(CAPTURE_ORIGINS as readonly string[]).includes(input.captureOrigin)
@@ -61,14 +80,23 @@ export function parseCreateContribution(body: unknown, userId: string): CreateCo
   if (match[1].toLowerCase() !== userId.toLowerCase()) {
     throw new ApiError(403, ERROR_CODES.NOT_OWNER, 'La foto no pertenece al usuario');
   }
-
   return {
-    actionType: input.actionType as ActionType,
-    description,
-    municipalityCode: input.municipalityCode,
     photoPath: input.photoPath as string,
     captureOrigin: input.captureOrigin as CaptureOrigin,
   };
+}
+
+/** Body of `POST /contributions/{id}/evidence`, same rules as creation. */
+export function parseProvideEvidence(body: unknown, userId: string): ProvideEvidenceRequest {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    throw new ApiError(400, ERROR_CODES.INVALID_REQUEST, 'Cuerpo de solicitud inválido');
+  }
+  return parseEvidenceFields(body as Record<string, unknown>, userId);
+}
+
+/** True when `id` has the UUID shape (anything else cannot exist: 404 without hitting the DB). */
+export function isUuid(id: string): boolean {
+  return UUID.test(id);
 }
 
 /** SHA-256 hex of the canonical JSON (sorted keys) of the fields that define the intent. */
@@ -178,4 +206,68 @@ export function toCreateResponse(row: CreateRpcRow): CreateContributionResponse 
     submittedAt: new Date(row.submitted_at).toISOString(),
     pointsIfApproved: row.points_snapshot,
   };
+}
+
+/** Columns `toContributionDto` needs; the route selects exactly these. */
+export const CONTRIBUTION_DTO_COLUMNS =
+  'id, action_type, status, ai_reason, submitted_at, approved_at, hidden_at, points_snapshot, processing_lease_until';
+
+export interface ContributionRow {
+  id: string;
+  action_type: ActionType;
+  status: ContributionStatus;
+  ai_reason: string | null;
+  submitted_at: string;
+  approved_at: string | null;
+  hidden_at: string | null;
+  points_snapshot: number;
+  processing_lease_until: string | null;
+}
+
+/** PENDING with no live reservation: nobody is validating it, so it can be retried. */
+export function isLeaseLive(row: Pick<ContributionRow, 'status' | 'processing_lease_until'>, now: Date): boolean {
+  return row.status === 'PENDING' && row.processing_lease_until !== null &&
+    new Date(row.processing_lease_until).getTime() > now.getTime();
+}
+
+/** api-contracts §4. Never exposes evidence/public paths, version, lease or idempotency data. */
+export function toContributionDto(row: ContributionRow, now: Date): ContributionDto {
+  const hidden = row.hidden_at !== null;
+  return {
+    id: row.id,
+    actionType: row.action_type,
+    status: row.status,
+    reason: row.ai_reason,
+    submittedAt: new Date(row.submitted_at).toISOString(),
+    approvedAt: row.approved_at === null ? null : new Date(row.approved_at).toISOString(),
+    isHidden: hidden,
+    effectivePoints: row.status === 'APPROVED' && !hidden ? row.points_snapshot : 0,
+    canRetry: row.status === 'TECHNICAL_ERROR' ||
+      (row.status === 'PENDING' && !isLeaseLive(row, now)),
+    canProvideEvidence: row.status === 'NEEDS_EVIDENCE',
+    canCancel: row.status === 'PENDING' || row.status === 'NEEDS_EVIDENCE' ||
+      row.status === 'TECHNICAL_ERROR',
+  };
+}
+
+/** Errors of cancel_contribution / retry_validation / submit_evidence (T13.a). */
+export function mapCommandRpcError(error: RpcError): Error {
+  const message = error.message ?? '';
+  if (error.code === 'P0001') {
+    switch (message) {
+      case 'NOT_FOUND':
+        return new ApiError(404, ERROR_CODES.NOT_FOUND, 'Aportación no encontrada');
+      case 'INVALID_STATE':
+        return new ApiError(409, ERROR_CODES.INVALID_STATE, 'La aportación no está en un estado que lo permita');
+      case 'INVALID_REQUEST':
+        return new ApiError(400, ERROR_CODES.INVALID_REQUEST, 'Solicitud inválida');
+    }
+  }
+  if (
+    error.code === '23505' &&
+    (message.includes('contributions_evidence_path_key') || (error.details ?? '').includes('(evidence_path)'))
+  ) {
+    return new ApiError(409, ERROR_CODES.PHOTO_ALREADY_USED, 'La foto ya está asociada a otra aportación');
+  }
+  return new Error('Contribution command failed');
 }
