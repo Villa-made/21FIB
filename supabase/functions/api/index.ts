@@ -12,6 +12,7 @@ import {
   supabaseValidationRepository,
 } from './domain/ports.ts';
 import type { ValidationPorts } from './domain/validation-workflow.ts';
+import { communityRoutes } from './routes/community.ts';
 import { contributionRoutes } from './routes/contributions.ts';
 import { municipalityRoutes } from './routes/municipalities.ts';
 import { publicReadRoutes } from './routes/public-reads.ts';
@@ -72,6 +73,7 @@ const productionRoutes: Route[] = [
     inspector: failClosedInspector,
     validationPorts: productionValidationPorts,
   }),
+  ...communityRoutes(productionDeps),
 ];
 
 export function createHandler(routes: Route[]): (req: Request) => Promise<Response> {

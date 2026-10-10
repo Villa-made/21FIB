@@ -130,6 +130,12 @@ El campo `imageUrl` es una ruta **relativa a la base de la API**, no al origen d
 }
 ```
 
+**Me gusta:** `PUT /contributions/{id}/like` y `DELETE /contributions/{id}/like` (cuerpo vacío). Ambos son idempotentes y responden `200` con el estado final; los likes no dan puntos. La publicación debe estar visible (`APPROVED` y no oculta, sin ventana de 30 días); si no existe o no es visible → `404 NOT_FOUND`; si es propia → `403 CANNOT_LIKE_OWN`.
+
+```json
+{ "liked": true, "likeCount": 4 }
+```
+
 **Ranking:** `GET /leaderboard?limit=20&cursor=...`
 
 ```json
@@ -173,6 +179,7 @@ interface ValidationResult { decision: Decision; reason: string; }
 | `401` | `AUTH_REQUIRED` | Publicación/like sin sesión |
 | `403` | `NOT_OWNER` | Intento de modificar aportación ajena |
 | `403` | `PROFILE_REQUIRED` | Escritura sin perfil |
+| `403` | `CANNOT_LIKE_OWN` | Me gusta (PUT/DELETE) sobre una publicación propia |
 | `404` | `PROFILE_REQUIRED` | `GET /profiles/me` sin perfil |
 | `409` | `ALIAS_TAKEN` | El alias ya pertenece a otro perfil, sin distinguir mayúsculas |
 | `409` | `PROFILE_EXISTS` | Segundo `POST /profiles` del mismo usuario |
