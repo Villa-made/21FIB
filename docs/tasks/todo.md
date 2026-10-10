@@ -137,18 +137,20 @@
 
 ### T06 — Crear adaptador real de validación multimodal
 
-- [ ] **T06 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T06 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** C · **Ventana:** 00:45–01:25 · **Tamaño:** M (3 archivos previstos) · **Dependencias:** T02.
 
 **Descripción:** Adaptar Cloudflare Workers AI con imagen + texto, política por acción y JSON estricto; no tomar decisiones de puntuación ni escribir en DB.
 
 **Criterios de aceptación:**
-- [ ] Devuelve `APPROVED`, `NEEDS_EVIDENCE` o `REJECTED` con razón saneada válida.
-- [ ] Respuesta malformada, timeout, 429 y fallo de licencia no se convierten en aprobado; no filtra claves.
+- [x] Devuelve `APPROVED`, `NEEDS_EVIDENCE` o `REJECTED` con razón saneada válida.
+- [x] Respuesta malformada, timeout, 429 y fallo de licencia no se convierten en aprobado; no filtra claves.
 
 **Verificación:**
-- [ ] Tests de parseo, error y prompt injection; integración real con material no personal.
+- [x] Tests de parseo, error y prompt injection; integración real con material no personal.
+
+**Evidencia T06 (2026-10-10):** `deno test` con comprobación de tipos: 20/20; `npm run lint` y `npm run build`: correctos. El adaptador devolvió `APPROVED` con la imagen propia relevante y `REJECTED` con la imagen propia no relacionada. La descripción vacía o de solo espacios devuelve `NEEDS_EVIDENCE` sin llamar al proveedor; 403/429, timeout y salida malformada siguen siendo fallos técnicos sin aprobación. No se registraron credenciales, bytes de imagen ni respuestas crudas.
 
 **Archivos previstos:** `supabase/functions/api/ai/validator.ts`, `supabase/functions/api/ai/schema.ts`, `tests/ai/validator.test.ts`.
 

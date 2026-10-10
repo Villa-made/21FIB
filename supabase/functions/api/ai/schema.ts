@@ -66,7 +66,10 @@ export function parseValidationResult(raw: string): ValidationResult | null {
   if (
     reason.length === 0 ||
     reason.length > MAX_VALIDATION_REASON_LENGTH ||
-    /[\u0000-\u001F\u007F]/.test(reason)
+    [...reason].some((character) => {
+      const code = character.charCodeAt(0);
+      return code <= 0x1f || code === 0x7f;
+    })
   ) {
     return null;
   }

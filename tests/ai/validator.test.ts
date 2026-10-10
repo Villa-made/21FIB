@@ -6,8 +6,11 @@ import {
   classifyProviderException,
   classifyProviderStatus,
   CLOUDFLARE_VISION_MODEL,
+  CLOUDFLARE_VISION_TIMEOUT_MS,
+  createProviderDiagnostic,
   type VisionInferenceRequest,
   validateVisionEvidence,
+  withProviderTimeout,
 } from '../../supabase/functions/api/ai/validator.ts';
 
 Deno.test('parseValidationResult accepts an exact approved result and normalizes its reason', () => {
@@ -112,6 +115,44 @@ Deno.test('classifyProviderException preserves safe classifications for SDK HTTP
   assertEquals(classifyProviderException({ statusCode: 504 }).kind, 'TIMEOUT');
 });
 
+Deno.test('uses a bounded provider timeout appropriate for a synchronous validation attempt', () => {
+  assertEquals(CLOUDFLARE_VISION_TIMEOUT_MS, 30_000);
+});
+
+Deno.test('withProviderTimeout rejects an uncooperative operation as a timeout', async () => {
+  try {
+    await withProviderTimeout(new Promise<never>(() => undefined), 1);
+    throw new Error('Expected timeout');
+  } catch (error) {
+    assertEquals(error instanceof Error && error.name, 'TimeoutError');
+  }
+});
+
+Deno.test('createProviderDiagnostic allow-lists server-only metadata and excludes upstream content', () => {
+  const secret = 'Bearer secret-token-must-not-leak';
+  const diagnostic = createProviderDiagnostic(
+    'INFERENCE',
+    {
+      name: 'AI_APICallError',
+      statusCode: 429,
+      code: 'RATE_LIMITED',
+      message: secret,
+      cause: { name: 'TypeError', message: secret },
+    },
+    12.9,
+  );
+
+  assertEquals(diagnostic, {
+    stage: 'INFERENCE',
+    errorName: 'AI_APICallError',
+    status: 429,
+    errorCode: 'RATE_LIMITED',
+    causeName: 'TypeError',
+    durationMs: 12,
+  });
+  assertEquals(JSON.stringify(diagnostic).includes(secret), false);
+});
+
 Deno.test('detectImageMediaType recognizes the approved JPEG, PNG, and WebP byte signatures', () => {
   assertEquals(detectImageMediaType(new Uint8Array([0xff, 0xd8, 0xff, 0xe0])), 'image/jpeg');
   assertEquals(
@@ -173,7 +214,30 @@ Deno.test('validateVisionEvidence preserves every valid provider decision from t
   }
 });
 
-Deno.test('buildCloudflareVisionMessages uses the T02-verified text-plus-file image shape', () => {
+Deno.test('validateVisionEvidence never approves a blank description', async () => {
+  const image = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+
+  for (const actionType of ['RECYCLING', 'LITTER_COLLECTION'] as const) {
+    for (const description of ['', ' \t\n ']) {
+      let providerCalled = false;
+      const result = await validateVisionEvidence(
+        { actionType, description, originalImageBytes: image },
+        async () => {
+          providerCalled = true;
+          return '{"decision":"APPROVED","reason":"No debe aprobarse."}';
+        },
+      );
+
+      assertEquals(result, {
+        decision: 'NEEDS_EVIDENCE',
+        reason: 'La descripción es necesaria para valorar la imagen.',
+      });
+      assertEquals(providerCalled, false);
+    }
+  }
+});
+
+Deno.test('buildCloudflareVisionMessages uses the T02-verified text-plus-file user message shape', () => {
   const image = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
   const messages = buildCloudflareVisionMessages({
     model: CLOUDFLARE_VISION_MODEL,
@@ -183,16 +247,13 @@ Deno.test('buildCloudflareVisionMessages uses the T02-verified text-plus-file im
     mediaType: 'image/png',
   });
 
-  assertEquals(messages, [
-    { role: 'system', content: 'PolÃ­tica del servidor.' },
-    {
+  assertEquals(messages, [{
       role: 'user',
       content: [
         { type: 'text', text: 'Datos no confiables.' },
         { type: 'file', data: image, mediaType: 'image/png' },
       ],
-    },
-  ]);
+    }]);
 });
 
 Deno.test('validateVisionEvidence makes malformed output, unsupported bytes, and provider errors technical failures', async () => {

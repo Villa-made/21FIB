@@ -3,6 +3,8 @@ import { detectImageMediaType, parseValidationResult, type ImageMediaType } from
 
 /** The T02-validated Workers AI vision model. */
 export const CLOUDFLARE_VISION_MODEL = '@cf/google/gemma-4-26b-a4b-it';
+/** Bound one synchronous provider call so an unavailable provider cannot hang work. */
+export const CLOUDFLARE_VISION_TIMEOUT_MS = 30_000;
 
 /**
  * Supplied by server-only composition. This module never reads browser-visible
@@ -13,6 +15,23 @@ export interface CloudflareVisionCredentials {
   apiToken: string;
 }
 
+export type ProviderFailureStage = 'SDK_IMPORT' | 'PROVIDER_SETUP' | 'INFERENCE';
+
+/** Server-only diagnostic metadata. Never include prompts, bodies, or secrets. */
+export interface ProviderDiagnostic {
+  stage: ProviderFailureStage;
+  errorName: string;
+  status: number | null;
+  errorCode: string | null;
+  causeName: string | null;
+  durationMs: number;
+}
+
+export interface CloudflareVisionOptions {
+  /** Optional server-side telemetry hook; it must not forward data to clients. */
+  onDiagnostic?: (diagnostic: ProviderDiagnostic) => void;
+}
+
 export interface VisionInferenceRequest {
   model: typeof CLOUDFLARE_VISION_MODEL;
   system: string;
@@ -21,9 +40,7 @@ export interface VisionInferenceRequest {
   mediaType: ImageMediaType;
 }
 
-export type CloudflareVisionMessage =
-  | { role: 'system'; content: string }
-  | {
+export type CloudflareVisionMessage = {
     role: 'user';
     content: [
       { type: 'text'; text: string },
@@ -101,6 +118,63 @@ function providerStatusFromException(error: unknown): number | null {
   return null;
 }
 
+function safeDiagnosticToken(value: unknown, fallback: string | null): string | null {
+  return typeof value === 'string' && /^[A-Za-z0-9_.-]{1,80}$/.test(value) ? value : fallback;
+}
+
+/** Produces an allow-listed diagnostic record without copying an upstream message or body. */
+export function createProviderDiagnostic(
+  stage: ProviderFailureStage,
+  error: unknown,
+  durationMs: number,
+): ProviderDiagnostic {
+  const candidate = typeof error === 'object' && error !== null
+    ? error as { name?: unknown; status?: unknown; statusCode?: unknown; code?: unknown; cause?: unknown }
+    : {};
+  const cause = typeof candidate.cause === 'object' && candidate.cause !== null
+    ? candidate.cause as { name?: unknown }
+    : {};
+  const rawStatus = candidate.statusCode ?? candidate.status;
+
+  return {
+    stage,
+    errorName: safeDiagnosticToken(candidate.name, 'UnknownError') ?? 'UnknownError',
+    status: typeof rawStatus === 'number' && Number.isInteger(rawStatus) && rawStatus >= 100 && rawStatus <= 599
+      ? rawStatus
+      : null,
+    errorCode: safeDiagnosticToken(candidate.code, null),
+    causeName: safeDiagnosticToken(cause.name, null),
+    durationMs: Number.isFinite(durationMs) && durationMs >= 0 ? Math.floor(durationMs) : 0,
+  };
+}
+
+function reportProviderDiagnostic(
+  reporter: CloudflareVisionOptions['onDiagnostic'],
+  stage: ProviderFailureStage,
+  error: unknown,
+  startedAt: number,
+): void {
+  try {
+    reporter?.(createProviderDiagnostic(stage, error, Date.now() - startedAt));
+  } catch {
+    // Telemetry must never affect validation or expose a new failure channel.
+  }
+}
+
+/** Enforces a local deadline even when an SDK or transport ignores AbortSignal. */
+export async function withProviderTimeout<T>(operation: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new DOMException('Provider request timed out', 'TimeoutError')), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([operation, timeout]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
+
 /** Network and abort errors are technical failures and can never approve evidence. */
 export function classifyProviderException(error: unknown): ProviderTechnicalError {
   const status = providerStatusFromException(error);
@@ -126,6 +200,12 @@ export async function validateVisionEvidence(
 ): Promise<ValidationResult> {
   const mediaType = detectImageMediaType(input.originalImageBytes);
   if (mediaType === null) throw new ProviderTechnicalError('UNAVAILABLE');
+  if (input.description.trim().length === 0) {
+    return {
+      decision: 'NEEDS_EVIDENCE',
+      reason: 'La descripción es necesaria para valorar la imagen.',
+    };
+  }
 
   const messages = buildValidationMessages(input);
 
@@ -148,13 +228,11 @@ export async function validateVisionEvidence(
   return result;
 }
 
-/** Builds the documented text-plus-file message shape validated in T02. */
+/** Builds the documented text-plus-file user message shape validated in T02. */
 export function buildCloudflareVisionMessages(
   request: VisionInferenceRequest,
 ): CloudflareVisionMessage[] {
-  return [
-    { role: 'system', content: request.system },
-    {
+  return [{
       role: 'user',
       content: [
         { type: 'text', text: request.user },
@@ -164,8 +242,7 @@ export function buildCloudflareVisionMessages(
           mediaType: request.mediaType,
         },
       ],
-    },
-  ];
+    }];
 }
 
 /**
@@ -175,26 +252,49 @@ export function buildCloudflareVisionMessages(
  */
 export function createCloudflareVisionExecutor(
   credentials: CloudflareVisionCredentials,
+  options: CloudflareVisionOptions = {},
 ): VisionTextExecutor {
   return async (request) => {
+    const startedAt = Date.now();
     // Deferred imports keep unit tests provider-free; this path executes only
     // in the trusted server composition that supplies the credentials.
-    const [{ generateText }, { createWorkersAI }] = await Promise.all([
-      import('npm:ai@7.0.137'),
-      import('npm:workers-ai-provider@4.0.0'),
-    ]);
-    const workersAi = createWorkersAI({
-      accountId: credentials.accountId,
-      apiKey: credentials.apiToken,
-    });
+    let generateText: (typeof import('npm:ai@7.0.137'))['generateText'];
+    let createWorkersAI: (typeof import('npm:workers-ai-provider@4.0.0'))['createWorkersAI'];
+    try {
+      [{ generateText }, { createWorkersAI }] = await Promise.all([
+        import('npm:ai@7.0.137'),
+        import('npm:workers-ai-provider@4.0.0'),
+      ]);
+    } catch (error) {
+      reportProviderDiagnostic(options.onDiagnostic, 'SDK_IMPORT', error, startedAt);
+      throw classifyProviderException(error);
+    }
+
+    let workersAi: ReturnType<typeof createWorkersAI>;
+    try {
+      workersAi = createWorkersAI({ accountId: credentials.accountId, apiKey: credentials.apiToken });
+    } catch (error) {
+      reportProviderDiagnostic(options.onDiagnostic, 'PROVIDER_SETUP', error, startedAt);
+      throw classifyProviderException(error);
+    }
 
     try {
-      const { text } = await generateText({
-        model: workersAi(request.model),
-        messages: buildCloudflareVisionMessages(request),
-      });
+      const { text } = await withProviderTimeout(
+        generateText({
+          model: workersAi(request.model),
+          // AI SDK reserves `instructions` for trusted system policy. This avoids
+          // enabling system messages in the untrusted conversation message array.
+          instructions: request.system,
+          messages: buildCloudflareVisionMessages(request),
+          abortSignal: AbortSignal.timeout(CLOUDFLARE_VISION_TIMEOUT_MS),
+          maxRetries: 0,
+          timeout: CLOUDFLARE_VISION_TIMEOUT_MS,
+        }),
+        CLOUDFLARE_VISION_TIMEOUT_MS,
+      );
       return text;
     } catch (error) {
+      reportProviderDiagnostic(options.onDiagnostic, 'INFERENCE', error, startedAt);
       throw classifyProviderException(error);
     }
   };
