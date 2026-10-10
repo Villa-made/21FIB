@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowRight, RotateCcw, Sparkles } from 'lucide-react'
+import { ArrowRight, RotateCcw } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { HERO_IMAGE } from '../../assets/demoImages'
 import CommunityActions from './CommunityActions'
 import {
   fetchFeed,
+  feedImageFallback,
   mediaSrc,
   readErrorMessage,
   areDevFixturesEnabled,
@@ -61,9 +63,13 @@ export default function FeedPage() {
   return (
     <div>
       <section className="relative min-h-[78vh] w-full flex items-end overflow-hidden border-b border-white/[0.08]">
-        <div className="absolute inset-0 bg-[#070D0A] bg-sensor-grid" />
+        <img
+          src={HERO_IMAGE}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-[#070D0A] via-[#070D0A]/75 to-[#070D0A]/30" />
-        <div className="absolute inset-0 bg-forest-circuit-gradient pointer-events-none" />
+        <div className="absolute inset-0 bg-sensor-grid opacity-35 pointer-events-none" />
 
         <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-8 py-14 sm:py-20">
           <div className="max-w-2xl space-y-6">
@@ -247,25 +253,21 @@ function FeedCard({
 }) {
   const [imgError, setImgError] = useState(false)
   const pts = pointsFor(item.actionType)
+  const primarySrc = item.imageUrl ? mediaSrc(item.imageUrl) : ''
+  const fallbackSrc = feedImageFallback(item.actionType, item.id)
+  const imgSrc = !item.imageUrl || imgError ? fallbackSrc : primarySrc
 
   return (
     <article className="group bg-[#0D1612] border border-[#1D3026] rounded-xl overflow-hidden transition-colors duration-150 hover:border-[#2A4537] flex flex-col">
       <div className="relative aspect-[4/3] w-full bg-[#13201A] overflow-hidden">
-        {!imgError ? (
-          <img
-            src={mediaSrc(item.imageUrl)}
-            alt={`${actionLabel(item.actionType)} en ${item.municipality.name} por ${item.authorAlias}`}
-            onError={() => setImgError(true)}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-sensor-grid">
-            <Sparkles className="w-8 h-8 text-[#12D6B0] mb-2 opacity-75" />
-            <p className="text-xs font-mono-tech text-[#98ABA2]">
-              Evidencia óptica verificada · {item.municipality.name}
-            </p>
-          </div>
-        )}
+        <img
+          src={imgSrc}
+          alt={`${actionLabel(item.actionType)} en ${item.municipality.name} por ${item.authorAlias}`}
+          onError={() => {
+            if (!imgError) setImgError(true)
+          }}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+        />
 
         <div className="absolute inset-0 bg-gradient-to-t from-[#070D0A]/90 via-[#070D0A]/20 to-transparent pointer-events-none" />
 

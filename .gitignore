@@ -30,3 +30,5 @@ package-lock.json
 
 # Keep self-owned spike fixtures local, but retain the Markdown evidence record.
 tests/ai/private-fixtures/
+
+/supabase/scripts/seed-demo-users.ts

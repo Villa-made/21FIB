@@ -25,6 +25,10 @@ describe('mediaSrc', () => {
   it('no reescribe URLs absolutas', () => {
     expect(mediaSrc('https://cdn.example/x.jpg')).toBe('https://cdn.example/x.jpg')
   })
+
+  it('no reescribe assets estáticos de Vite', () => {
+    expect(mediaSrc('/assets/demo-hero.jpg')).toBe('/assets/demo-hero.jpg')
+  })
 })
 
 describe('readErrorMessage', () => {

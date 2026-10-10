@@ -1,3 +1,4 @@
+import { demoImageFor, SAMPLE_IMAGES } from '../../assets/demoImages'
 import { ApiError, apiRequest, resolveMediaUrl } from '../../lib/api'
 import { getAccessToken, isAuthConfigured } from '../identity/authService'
 
@@ -47,6 +48,8 @@ export function readErrorMessage(e: unknown): string {
 }
 
 export function mediaSrc(imageUrl: string): string {
+  // Assets estáticos de Vite (/assets/…) o demos locales: no pasar por la API.
+  if (/^(https?:|data:|blob:|\/assets\/)/.test(imageUrl)) return imageUrl
   return resolveMediaUrl(imageUrl)
 }
 
@@ -59,14 +62,55 @@ function fixtureFeed(): Page<FeedItem> {
         actionType: 'RECYCLING',
         description: 'Separación de envases (fixture DEV).',
         municipality: { code: '08019', name: 'Barcelona' },
-        imageUrl: '/v1/media/fixture-1',
+        imageUrl: SAMPLE_IMAGES.madridRecycle,
         publishedAt: new Date().toISOString(),
         likeCount: 2,
+        likedByMe: false,
+      },
+      {
+        id: 'fix-feed-2',
+        authorAlias: 'VerdeBCN',
+        actionType: 'LITTER_COLLECTION',
+        description: 'Recogida en sendero (fixture DEV).',
+        municipality: { code: '08015', name: 'Badalona' },
+        imageUrl: SAMPLE_IMAGES.pirineosCleanup,
+        publishedAt: new Date(Date.now() - 3600_000).toISOString(),
+        likeCount: 5,
+        likedByMe: false,
+      },
+      {
+        id: 'fix-feed-3',
+        authorAlias: 'CostaClara',
+        actionType: 'LITTER_COLLECTION',
+        description: 'Limpieza de playa (fixture DEV).',
+        municipality: { code: '08187', name: 'Sitges' },
+        imageUrl: SAMPLE_IMAGES.valenciaCleanup,
+        publishedAt: new Date(Date.now() - 7200_000).toISOString(),
+        likeCount: 1,
+        likedByMe: false,
+      },
+      {
+        id: 'fix-feed-4',
+        authorAlias: 'ReciclaYa',
+        actionType: 'RECYCLING',
+        description: 'Contenedor amarillo (fixture DEV).',
+        municipality: { code: '08121', name: 'Mataró' },
+        imageUrl: SAMPLE_IMAGES.bilbaoRecycle,
+        publishedAt: new Date(Date.now() - 86400_000).toISOString(),
+        likeCount: 0,
         likedByMe: false,
       },
     ],
     nextCursor: null,
   }
+}
+
+/** Fallback visual cuando /media falla o no hay foto. */
+export function feedImageFallback(
+  actionType: ActionType,
+  seed: string,
+): string {
+  return demoImageFor(actionType, seed)
 }
 
 function fixtureLeaderboard(): Page<LeaderboardEntry> {
