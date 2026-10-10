@@ -21,6 +21,16 @@ export interface VisionInferenceRequest {
   mediaType: ImageMediaType;
 }
 
+export type CloudflareVisionMessage =
+  | { role: 'system'; content: string }
+  | {
+    role: 'user';
+    content: [
+      { type: 'text'; text: string },
+      { type: 'file'; data: Uint8Array; mediaType: ImageMediaType },
+    ];
+  };
+
 export type VisionTextExecutor = (request: VisionInferenceRequest) => Promise<string>;
 
 export interface ValidationMessages {
@@ -126,6 +136,26 @@ export async function validateVisionEvidence(
   return result;
 }
 
+/** Builds the documented text-plus-file message shape validated in T02. */
+export function buildCloudflareVisionMessages(
+  request: VisionInferenceRequest,
+): CloudflareVisionMessage[] {
+  return [
+    { role: 'system', content: request.system },
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: request.user },
+        {
+          type: 'file',
+          data: request.image,
+          mediaType: request.mediaType,
+        },
+      ],
+    },
+  ];
+}
+
 /**
  * Creates the server-side Workers AI executor used by validateVisionEvidence.
  * The official provider accepts Uint8Array image parts for REST-backed calls:
@@ -149,16 +179,7 @@ export function createCloudflareVisionExecutor(
     try {
       const { text } = await generateText({
         model: workersAi(request.model),
-        messages: [
-          { role: 'system', content: request.system },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: request.user },
-              { type: 'image', image: request.image },
-            ],
-          },
-        ],
+        messages: buildCloudflareVisionMessages(request),
       });
       return text;
     } catch (error) {

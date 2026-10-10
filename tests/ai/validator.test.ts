@@ -1,6 +1,7 @@
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import { detectImageMediaType, parseValidationResult } from '../../supabase/functions/api/ai/schema.ts';
 import {
+  buildCloudflareVisionMessages,
   buildValidationMessages,
   classifyProviderException,
   classifyProviderStatus,
@@ -147,6 +148,28 @@ Deno.test('validateVisionEvidence sends the T02 model, image bytes, and server-b
   assertEquals(received?.image, image);
   assertEquals(received?.mediaType, 'image/jpeg');
   assertStringIncludes(received?.system ?? '', 'RECYCLING');
+});
+
+Deno.test('buildCloudflareVisionMessages uses the T02-verified text-plus-file image shape', () => {
+  const image = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+  const messages = buildCloudflareVisionMessages({
+    model: CLOUDFLARE_VISION_MODEL,
+    system: 'PolÃ­tica del servidor.',
+    user: 'Datos no confiables.',
+    image,
+    mediaType: 'image/png',
+  });
+
+  assertEquals(messages, [
+    { role: 'system', content: 'PolÃ­tica del servidor.' },
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Datos no confiables.' },
+        { type: 'file', data: image, mediaType: 'image/png' },
+      ],
+    },
+  ]);
 });
 
 Deno.test('validateVisionEvidence makes malformed output, unsupported bytes, and provider errors technical failures', async () => {
