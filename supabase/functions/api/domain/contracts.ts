@@ -33,13 +33,19 @@ export const ERROR_CODES = {
   NOT_FOUND: 'NOT_FOUND',
   INTERNAL: 'INTERNAL',
   // §6 domain errors
+  INVALID_REQUEST: 'INVALID_REQUEST',
   AUTH_REQUIRED: 'AUTH_REQUIRED',
   NOT_OWNER: 'NOT_OWNER',
+  PROFILE_REQUIRED: 'PROFILE_REQUIRED',
+  ALIAS_TAKEN: 'ALIAS_TAKEN',
+  PROFILE_EXISTS: 'PROFILE_EXISTS',
   PENDING_CONTRIBUTION_EXISTS: 'PENDING_CONTRIBUTION_EXISTS',
   COOLDOWN_ACTIVE: 'COOLDOWN_ACTIVE',
   INVALID_STATE: 'INVALID_STATE',
   IDEMPOTENCY_CONFLICT: 'IDEMPOTENCY_CONFLICT',
   EXIF_REQUIRED: 'EXIF_REQUIRED',
+  INVALID_ALIAS: 'INVALID_ALIAS',
+  ADULT_DECLARATION_REQUIRED: 'ADULT_DECLARATION_REQUIRED',
   PHOTO_TOO_OLD: 'PHOTO_TOO_OLD',
   INVALID_MUNICIPALITY: 'INVALID_MUNICIPALITY',
   AI_UNAVAILABLE: 'AI_UNAVAILABLE',
@@ -52,6 +58,18 @@ export interface ErrorBody {
     message: string;
     details: Record<string, unknown>;
   };
+}
+
+// ---- Profiles (§4, D1) -----------------------------------------------------
+
+export interface CreateProfileRequest {
+  alias: string;
+  adultDeclared: boolean;
+}
+
+export interface ProfileDto {
+  userId: string;
+  alias: string;
 }
 
 // ---- Uploads (§4) ----------------------------------------------------------
@@ -172,3 +190,7 @@ export const DEFAULT_PAGE_LIMIT = 20;
 export const MAX_PAGE_LIMIT = 50;
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+// api-contracts §2, D1
+export const ALIAS_PATTERN = /^[A-Za-z0-9_.-]{3,24}$/;
+// api-contracts §4, D1
+export const DESCRIPTION_MAX_LENGTH = 500;

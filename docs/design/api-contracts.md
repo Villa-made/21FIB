@@ -1,6 +1,6 @@
 # Contratos API — Beta pública (v1)
 
-**Estado:** contrato propuesto como baseline de diseño, aprobado el stack; pendiente de tests de contrato. **Transport:** HTTPS + JSON salvo subida de imagen. **Base:** `https://<project>.supabase.co/functions/v1/api/v1`. Un único Edge Function `api` puede manejar rutas; el prefijo de Supabase se conserva en el router. No se promete que existan endpoints desplegados todavía.
+**Estado:** contrato propuesto como baseline de diseño, aprobado el stack; pendiente de tests de contrato. La v1 se amplía con perfiles por la decisión D1 (2026-10-10), sin renumerar la versión. **Transport:** HTTPS + JSON salvo subida de imagen. **Base:** `https://<project>.supabase.co/functions/v1/api/v1`. Un único Edge Function `api` puede manejar rutas; el prefijo de Supabase se conserva en el router. No se promete que existan endpoints desplegados todavía.
 
 ## 1. Convenciones
 
@@ -13,7 +13,7 @@
 
 ## 2. Autenticación
 
-Registro, login y logout **a través de Supabase Auth SDK**, sin endpoints REST personalizados. Configuración aprobada: **email/contraseña sin confirmación**, sin SMTP ni dominio. El formulario captura `alias` y `adultDeclared` y el servidor finaliza la creación de `profiles` con unicidad comprobada; no confiar en metadatos editables como autorización.
+Registro, login y logout **a través de Supabase Auth SDK**, sin endpoints REST personalizados. Configuración aprobada: **email/contraseña sin confirmación**, sin SMTP ni dominio. Tras `supabase.auth.signUp`, con la sesión resultante se llama a `POST /profiles`; tras el login se llama a `GET /profiles/me` y, si devuelve `404 PROFILE_REQUIRED`, la UI pide completar el perfil. El alias aplica `trim` y después `^[A-Za-z0-9_.-]{3,24}$`; se guarda con su capitalización, es único sin distinguir mayúsculas y no es editable en la beta. No confiar en metadatos editables como autorización.
 
 **Control del registro:** Supabase Auth CAPTCHA (Turnstile) activado con verificación por proveedor; verificar flujo de alta/sesión y la creación de perfil. Sin recuperación por correo en beta. No publicar email.
 
@@ -21,6 +21,8 @@ Registro, login y logout **a través de Supabase Auth SDK**, sin endpoints REST 
 
 | Método | Ruta desde `/v1` | Auth | Resultado / efecto |
 |---|---|---|---|
+| `POST` | `/profiles` | Usuario | Crea el perfil propio; `userId` procede del JWT |
+| `GET` | `/profiles/me` | Usuario | Devuelve el perfil propio |
 | `POST` | `/uploads` | Usuario | Emite `photoPath` temporal de propiedad del autor + `uploadToken` acotado para el bucket privado |
 | `POST` | `/contributions` | Usuario | Crea envío una vez; `202` con `id`, `status=PENDING` |
 | `GET` | `/contributions/{id}` | Autor | Estado propio, razón de IA y puntos efectivos; no expone token IA |
@@ -39,6 +41,26 @@ Registro, login y logout **a través de Supabase Auth SDK**, sin endpoints REST 
 **No existe un endpoint público para:** cambiar `status`, asignar puntos, modificar fecha, consultar originales de terceros, aprobar manualmente, ver emails o descargar denuncias. El procedimiento excepcional de moderación por equipo utiliza acceso administrativo seguro, fuera de esta API pública.
 
 ## 4. Payloads principales
+
+**Crear perfil:** `POST /profiles`
+
+```json
+{ "alias": "EcoUsuario", "adultDeclared": true }
+```
+
+Respuesta `201`:
+
+```json
+{ "userId": "<uuid>", "alias": "EcoUsuario" }
+```
+
+**Consultar perfil propio:** `GET /profiles/me`
+
+Respuesta `200`:
+
+```json
+{ "userId": "<uuid>", "alias": "EcoUsuario" }
+```
 
 **Emitir token de subida:** `POST /uploads`
 
@@ -65,6 +87,8 @@ El navegador sube el archivo a Supabase Storage usando el SDK y **ese token**; `
   "captureOrigin": "GALLERY"
 }
 ```
+
+`description` debe tener entre 1 y 500 caracteres después de aplicar `trim`.
 
 **Respuesta:** `202 Accepted`
 
@@ -137,13 +161,20 @@ interface ValidationResult { decision: Decision; reason: string; }
 
 | HTTP | `error.code` | Cuándo |
 |---|---|---|
+| `400` | `INVALID_REQUEST` | Cuerpo malformado o tipos incorrectos |
 | `401` | `AUTH_REQUIRED` | Publicación/like sin sesión |
 | `403` | `NOT_OWNER` | Intento de modificar aportación ajena |
+| `403` | `PROFILE_REQUIRED` | Escritura sin perfil |
+| `404` | `PROFILE_REQUIRED` | `GET /profiles/me` sin perfil |
+| `409` | `ALIAS_TAKEN` | El alias ya pertenece a otro perfil, sin distinguir mayúsculas |
+| `409` | `PROFILE_EXISTS` | Segundo `POST /profiles` del mismo usuario |
 | `409` | `PENDING_CONTRIBUTION_EXISTS` | Ya existe envío no resuelto del mismo tipo |
 | `409` | `COOLDOWN_ACTIVE` | Último aprobado enviado hace < 60 min; `details.retryAt` |
 | `409` | `INVALID_STATE` | Reintento/ocultación/cancelación fuera de estado permitido |
 | `409` | `IDEMPOTENCY_CONFLICT` | Misma clave, payload diferente |
 | `422` | `EXIF_REQUIRED` | Galería sin EXIF válido; pedir cámara |
+| `422` | `INVALID_ALIAS` | Alias inválido después de aplicar `trim` |
+| `422` | `ADULT_DECLARATION_REQUIRED` | `adultDeclared` ausente o distinto de `true` |
 | `422` | `PHOTO_TOO_OLD` | EXIF anterior a 60 min o futuro |
 | `422` | `INVALID_MUNICIPALITY` | Código no existe en catálogo cargado |
 | `503` | `AI_UNAVAILABLE` | Proveedor no disponible (en reintento se refleja también en estado) |
