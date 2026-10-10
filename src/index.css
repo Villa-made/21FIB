@@ -1,111 +1,113 @@
+@import "tailwindcss";
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* ── 1. BASE SURFACES (60% Dominant Neutral Canvas — Forest Charcoal & Deep Slate) ── */
+  --bg-canvas: #070D0A;          /* Negro vegetal profundo */
+  --bg-surface-1: #0D1612;       /* Carbón forestal — cards primarias */
+  --bg-surface-2: #13201A;       /* Slate botánico — inputs, hover, paneles secundarios */
+  --bg-surface-glass: rgba(13, 22, 18, 0.84);
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* ── 2. STRUCTURAL BORDERS & HAIRLINES (30% Structural Surfaces) ── */
+  --border-hairline: rgba(240, 245, 242, 0.08);
+  --border-subtle: #1D3026;
+  --border-focus: #7CE83A;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* ── 3. TYPOGRAPHY & NEUTRALS (Off-white técnico & Gris frío) ── */
+  --text-primary: #F0F5F2;       /* Off-white técnico (contraste 17.4:1 sobre canvas) */
+  --text-secondary: #98ABA2;     /* Gris frío botánico (contraste 7.2:1) */
+  --text-muted: #5E7369;         /* Metadatos secundarios y separadores */
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* ── 4. ACCENTS & SEMANTIC STATES (10% Accent Budget) ── */
+  --accent-primary: #7CE83A;     /* Verde eléctrico / Limón tech */
+  --accent-primary-hover: #92F252;
+  --accent-Secondary: #12D6B0;   /* Teal bioluminiscente */
+  --accent-sensor: #22D3EE;      /* Cian de sensores (escaneo IA / telemetría óptica) */
+
+  /* Estados semánticos */
+  --state-success: #2EE58D;      /* Éxito / Aprobado */
+  --state-pending: #22D3EE;      /* Analizando / Pendiente (Cian sensor) */
+  --state-warning: #F5A623;      /* Ámbar técnico (Solicitar más evidencia / sin EXIF) */
+  --state-error: #F26457;        /* Coral técnico (Rechazo o error sin rojo alarma vulgar) */
+
+  /* ── 5. TYPOGRAPHY FAMILIES ── */
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* ── 6. SPACING, RADIUS & ELEVATION ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --elevation-1: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
+}
+
+@layer base {
+  #root {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    text-align: initial;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    letter-spacing: 0.005em;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono-tech {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+/* ── ATMOSPHERIC SENSOR GRID & LIDAR OVERLAYS ── */
+.bg-sensor-grid {
+  background-size: 32px 32px;
+  background-image:
+    linear-gradient(to right, rgba(240, 245, 242, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(240, 245, 242, 0.035) 1px, transparent 1px);
+}
+
+.bg-forest-circuit-gradient {
+  background: radial-gradient(circle at 50% 0%, rgba(18, 214, 176, 0.09) 0%, rgba(124, 232, 58, 0.03) 35%, rgba(7, 13, 10, 0) 70%);
+}
+
+/* ── AI VISION SCANLINE MICROINTERACTION (COMPOSITOR ONLY) ── */
+@keyframes visionScan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0.15;
   }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  50% {
+    opacity: 0.85;
   }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  100% {
+    transform: translateY(320%);
+    opacity: 0.15;
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+.animate-vision-scan {
+  animation: visionScan 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-vision-scan {
+    animation: none;
   }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }

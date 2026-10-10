@@ -3,9 +3,9 @@ import {
   useEffect,
   useRef,
   useState,
-  type CSSProperties,
   type FormEvent,
 } from 'react'
+import { EyeOff, Flag, Heart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { TURNSTILE_SITE_KEY } from '../identity/authService'
 import { useAuth } from '../identity/AuthPage'
@@ -19,58 +19,6 @@ import {
   reportContribution,
   unlikeContribution,
 } from './communityApi'
-
-const row: CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.5rem',
-  alignItems: 'stretch',
-  width: '100%',
-}
-
-const btn: CSSProperties = {
-  border: '1px solid #d6d3d1',
-  borderRadius: '0.5rem',
-  padding: '0.55rem 0.85rem',
-  background: '#fff',
-  fontWeight: 600,
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-  minHeight: '44px',
-  flex: '1 1 auto',
-  touchAction: 'manipulation',
-  boxSizing: 'border-box',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  textAlign: 'center',
-}
-
-const btnDanger: CSSProperties = { ...btn, borderColor: '#fca5a5', color: '#991b1b' }
-
-const hint: CSSProperties = { fontSize: '0.8rem', color: '#78716c', margin: 0, lineHeight: 1.4 }
-
-const errBox: CSSProperties = {
-  padding: '0.65rem 0.75rem',
-  borderRadius: '0.5rem',
-  background: '#fef2f2',
-  color: '#991b1b',
-  fontSize: '0.875rem',
-  width: '100%',
-  boxSizing: 'border-box',
-}
-
-const panel: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.65rem',
-  padding: '0.75rem',
-  borderRadius: '0.5rem',
-  background: '#fafaf9',
-  border: '1px solid #e7e5e4',
-  width: '100%',
-  boxSizing: 'border-box',
-}
 
 declare global {
   interface Window {
@@ -142,7 +90,11 @@ function ReportTurnstile({
   }, [onToken, resetKey])
 
   if (!TURNSTILE_SITE_KEY) {
-    return <p style={hint}>CAPTCHA no configurado (falta VITE_TURNSTILE_SITE_KEY).</p>
+    return (
+      <p className="text-xs text-[#98ABA2]">
+        CAPTCHA no configurado (falta VITE_TURNSTILE_SITE_KEY).
+      </p>
+    )
   }
   return <div ref={ref} />
 }
@@ -234,103 +186,147 @@ export default function CommunityActions({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      <div style={row}>
-        {status === 'anonymous' || status === 'loading' ? (
-          <Link to="/acceso" style={{ ...btn, textDecoration: 'none' }}>
-            Entrar para Me gusta
-          </Link>
-        ) : own ? (
-          <button type="button" style={btn} disabled title="No puedes dar Me gusta a tu publicación">
-            Me gusta (propia)
-          </button>
-        ) : (
-          <button type="button" style={btn} disabled={busy || !mayLike} onClick={() => void toggleLike()}>
-            {likedByMe ? 'Quitar Me gusta' : 'Me gusta'} · {likeCount}
-          </button>
-        )}
-
-        {own && (
-          <button
-            type="button"
-            style={btnDanger}
-            disabled={busy}
-            onClick={() => {
-              setConfirmHide(true)
-              setError(null)
-            }}
-          >
-            Ocultar
-          </button>
-        )}
-
-        <button
-          type="button"
-          style={btn}
-          disabled={busy}
-          onClick={() => {
-            setReportOpen((v) => !v)
-            setReportOk(false)
-            setError(null)
-          }}
+    <div className="flex flex-col gap-3">
+      {confirmHide ? (
+        <div
+          role="dialog"
+          aria-label="Confirmar ocultación"
+          className="p-3.5 rounded-lg bg-[#13201A] border border-[#F26457]/40 space-y-2.5"
         >
-          Denunciar
-        </button>
-      </div>
-
-      {confirmHide && (
-        <div style={panel} role="dialog" aria-label="Confirmar ocultación">
-          <p style={hint}>
-            Si ocultas la publicación, dejará de verse en el feed y se revocarán los puntos asociados
-            (10 o 20 según el tipo). Esta acción no se puede deshacer desde la app.
+          <p className="text-xs text-[#F0F5F2] leading-snug">
+            Si ocultas la publicación, dejará de verse en el feed y se revocarán los puntos
+            asociados (10 o 20 según el tipo). Esta acción no se puede deshacer desde la app.
           </p>
-          <div style={row}>
-            <button type="button" style={btnDanger} disabled={busy} onClick={() => void confirmHideAction()}>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setConfirmHide(false)}
+              className="min-h-[38px] px-3 py-1.5 text-xs font-medium text-[#98ABA2] hover:text-[#F0F5F2] rounded-md"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void confirmHideAction()}
+              className="min-h-[38px] px-3 py-1.5 text-xs font-semibold bg-[#F26457] text-[#070D0A] hover:bg-[#f57b70] rounded-md"
+            >
               {busy ? 'Ocultando…' : 'Confirmar ocultación'}
             </button>
-            <button type="button" style={btn} disabled={busy} onClick={() => setConfirmHide(false)}>
-              Cancelar
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-2">
+          {status === 'anonymous' || status === 'loading' ? (
+            <Link
+              to="/acceso"
+              className="min-h-[44px] px-3 -ml-2 rounded-lg inline-flex items-center gap-2 text-xs font-medium text-[#98ABA2] hover:text-[#F0F5F2] hover:bg-[#13201A] transition-colors"
+            >
+              Entrar para Me gusta
+            </Link>
+          ) : own ? (
+            <button
+              type="button"
+              disabled
+              title="No puedes dar Me gusta a tu publicación"
+              className="min-h-[44px] px-3 -ml-2 rounded-lg inline-flex items-center gap-2 text-xs font-medium text-[#5E7369]"
+            >
+              <Heart className="w-4 h-4" />
+              <span className="font-mono-tech">{likeCount}</span>
+              <span className="text-[#5E7369] hidden sm:inline">· propia</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={busy || !mayLike}
+              onClick={() => void toggleLike()}
+              className={`min-h-[44px] px-3 -ml-2 rounded-lg inline-flex items-center gap-2 text-xs font-medium transition-colors ${
+                likedByMe
+                  ? 'text-[#7CE83A] bg-[#7CE83A]/10'
+                  : 'text-[#98ABA2] hover:text-[#F0F5F2] hover:bg-[#13201A]'
+              }`}
+              aria-label={`Reconocer acción (${likeCount} apoyos, 0 puntos)`}
+            >
+              <Heart
+                className={`w-4 h-4 transition-transform active:scale-125 ${
+                  likedByMe ? 'fill-[#7CE83A] text-[#7CE83A]' : ''
+                }`}
+              />
+              <span className="font-mono-tech">{likeCount}</span>
+              <span className="text-[#5E7369] hidden sm:inline">· 0 pts</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1">
+            {own && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setConfirmHide(true)
+                  setError(null)
+                }}
+                className="min-h-[44px] px-3 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium text-[#98ABA2] hover:text-[#F26457] hover:bg-[#F26457]/10 transition-colors"
+              >
+                <EyeOff className="w-3.5 h-3.5" />
+                <span>Ocultar</span>
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                setReportOpen((v) => !v)
+                setReportOk(false)
+                setError(null)
+              }}
+              className="min-h-[44px] px-3 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium text-[#98ABA2] hover:text-[#F5A623] hover:bg-[#F5A623]/10 transition-colors"
+            >
+              <Flag className="w-3.5 h-3.5" />
+              <span>Denunciar</span>
             </button>
           </div>
         </div>
       )}
 
       {reportOpen && (
-        <form style={panel} onSubmit={(ev) => void submitReport(ev)}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Motivo</span>
+        <form
+          onSubmit={(ev) => void submitReport(ev)}
+          className="p-4 rounded-xl bg-[#13201A] border border-[#1D3026] space-y-3"
+        >
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold text-[#F0F5F2]">Motivo</span>
             <textarea
               value={reason}
               onChange={(ev) => setReason(ev.target.value)}
               rows={3}
               required
-              style={{
-                border: '1px solid #d6d3d1',
-                borderRadius: '0.5rem',
-                padding: '0.65rem',
-                fontFamily: 'inherit',
-                width: '100%',
-                boxSizing: 'border-box',
-                minHeight: '5rem',
-                fontSize: '1rem',
-              }}
+              className="w-full min-h-[5rem] rounded-xl bg-[#070D0A] border border-[#1D3026] px-3 py-2 text-sm text-[#F0F5F2] focus:border-[#7CE83A] outline-none resize-y"
             />
           </label>
           <ReportTurnstile onToken={onCaptcha} resetKey={captchaKey} />
-          <button type="submit" style={{ ...btn, width: '100%' }} disabled={busy}>
-            {busy ? 'Enviando…' : 'Enviar denuncia'}
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full min-h-[44px] rounded-xl bg-[#F5A623] hover:bg-[#f7b44a] text-[#070D0A] text-xs font-semibold transition-colors disabled:opacity-50"
+          >
+            {busy ? 'Enviando…' : 'Enviar aviso de revisión'}
           </button>
         </form>
       )}
 
       {reportOk && (
-        <p style={hint} role="status">
+        <p className="text-xs text-[#98ABA2]" role="status">
           Denuncia recibida. El equipo la revisará; no se muestra el resultado.
         </p>
       )}
 
       {error && (
-        <div style={errBox} role="alert">
+        <div
+          role="alert"
+          className="rounded-lg bg-[#161214] border border-[#F26457]/40 px-3 py-2 text-xs text-[#F26457]"
+        >
           {error}
         </div>
       )}

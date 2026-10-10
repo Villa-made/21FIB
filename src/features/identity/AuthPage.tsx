@@ -6,10 +6,10 @@ import {
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
   type FormEvent,
   type ReactNode,
 } from 'react'
+import { Lock } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import {
   ALIAS_RULE,
@@ -60,7 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    // refresh() es async: el setState ocurre tras await, no de forma síncrona en el efecto.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- bootstrap de sesión al montar
     void refresh()
     return subscribeAuth(() => {
@@ -87,59 +86,6 @@ export function useAuth(): AuthState {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth debe usarse dentro de <AuthProvider>')
   return ctx
-}
-
-const card: CSSProperties = {
-  padding: '1.25rem',
-  borderRadius: '0.75rem',
-  background: '#fff',
-  border: '1px solid #e7e5e4',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.85rem',
-}
-
-const inputStyle: CSSProperties = {
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: '0.55rem 0.75rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #d6d3d1',
-  fontSize: '0.95rem',
-}
-
-const btnPrimary: CSSProperties = {
-  border: 'none',
-  borderRadius: '0.5rem',
-  padding: '0.6rem 1rem',
-  background: '#16a34a',
-  color: '#fff',
-  fontWeight: 700,
-  cursor: 'pointer',
-}
-
-const btnGhost: CSSProperties = {
-  border: '1px solid #d6d3d1',
-  borderRadius: '0.5rem',
-  padding: '0.6rem 1rem',
-  background: '#fff',
-  color: '#44403c',
-  fontWeight: 600,
-  cursor: 'pointer',
-}
-
-const errBox: CSSProperties = {
-  padding: '0.65rem 0.75rem',
-  borderRadius: '0.5rem',
-  background: '#fef2f2',
-  color: '#991b1b',
-  fontSize: '0.875rem',
-}
-
-const hint: CSSProperties = {
-  fontSize: '0.8rem',
-  color: '#78716c',
-  lineHeight: 1.4,
 }
 
 declare global {
@@ -215,6 +161,9 @@ function TurnstileBox({
   return <div ref={ref} />
 }
 
+const fieldClass =
+  'w-full min-h-[46px] rounded-xl bg-[#070D0A] border border-[#1D3026] px-3 py-2 text-sm text-[#F0F5F2] focus:border-[#7CE83A] outline-none'
+
 function CompleteProfile() {
   const { refresh, signOut } = useAuth()
   const [alias, setAlias] = useState('')
@@ -239,46 +188,66 @@ function CompleteProfile() {
   }
 
   return (
-    <form style={card} onSubmit={(e) => void submit(e)}>
-      <h1 style={{ margin: 0, fontSize: '1.35rem' }}>Completa tu perfil</h1>
-      <p style={hint}>Último paso: elige un alias público para participar.</p>
-      <label>
-        <span style={{ display: 'block', marginBottom: 4, fontSize: '0.875rem', fontWeight: 600 }}>
-          Alias público
-        </span>
-        <input
-          style={inputStyle}
-          value={alias}
-          onChange={(ev) => setAlias(ev.target.value)}
-          autoComplete="nickname"
-          required
-        />
-        <span style={hint}>{ALIAS_RULE}</span>
-      </label>
-      <label style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', fontSize: '0.875rem' }}>
-        <input
-          type="checkbox"
-          checked={adult}
-          onChange={(ev) => setAdult(ev.target.checked)}
-        />
-        <span>
-          Declaro que tengo <strong>18 años o más</strong>.
-        </span>
-      </label>
-      {error && (
-        <div style={errBox} role="alert">
-          {error}
+    <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <form
+        onSubmit={(e) => void submit(e)}
+        className="max-w-xl bg-[#0D1612] border border-[#1D3026] rounded-2xl p-6 sm:p-8 space-y-5"
+      >
+        <div>
+          <p className="text-xs font-mono-tech text-[#12D6B0]">PERFIL · ÚLTIMO PASO</p>
+          <h1 className="text-2xl font-display font-semibold text-[#F0F5F2] mt-1">
+            Completa tu perfil
+          </h1>
+          <p className="text-sm text-[#98ABA2] mt-1">Elige un alias público para participar.</p>
         </div>
-      )}
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <button type="submit" style={btnPrimary} disabled={busy}>
-          {busy ? 'Guardando…' : 'Guardar alias'}
-        </button>
-        <button type="button" style={btnGhost} onClick={() => void signOut()}>
-          Salir
-        </button>
-      </div>
-    </form>
+        <label className="block space-y-1.5">
+          <span className="text-xs font-semibold text-[#F0F5F2]">Alias público</span>
+          <input
+            className={fieldClass}
+            value={alias}
+            onChange={(ev) => setAlias(ev.target.value)}
+            autoComplete="nickname"
+            required
+          />
+          <span className="text-xs text-[#5E7369]">{ALIAS_RULE}</span>
+        </label>
+        <label className="flex gap-3 items-start text-sm text-[#F0F5F2]">
+          <input
+            type="checkbox"
+            checked={adult}
+            onChange={(ev) => setAdult(ev.target.checked)}
+            className="mt-1 accent-[#7CE83A]"
+          />
+          <span>
+            Declaro que tengo <strong>18 años o más</strong>.
+          </span>
+        </label>
+        {error && (
+          <div
+            role="alert"
+            className="rounded-xl bg-[#161214] border border-[#F26457]/40 px-4 py-3 text-sm text-[#F26457]"
+          >
+            {error}
+          </div>
+        )}
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="submit"
+            disabled={busy}
+            className="min-h-[48px] px-5 rounded-xl bg-[#7CE83A] hover:bg-[#92F252] text-[#070D0A] font-semibold text-sm disabled:opacity-50"
+          >
+            {busy ? 'Guardando…' : 'Guardar alias'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            className="min-h-[48px] px-5 rounded-xl bg-[#13201A] border border-[#1D3026] text-[#F0F5F2] text-sm"
+          >
+            Salir
+          </button>
+        </div>
+      </form>
+    </section>
   )
 }
 
@@ -301,7 +270,9 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null)
 
   if (status === 'loading') {
-    return <p style={{ textAlign: 'center', color: '#78716c' }}>Cargando sesión…</p>
+    return (
+      <p className="text-center text-[#98ABA2] py-16 text-sm">Cargando sesión…</p>
+    )
   }
   if (status === 'ready') return <Navigate to={from} replace />
   if (status === 'needs-profile') return <CompleteProfile />
@@ -351,102 +322,157 @@ export default function AuthPage() {
   }
 
   return (
-    <form style={card} onSubmit={(e) => void submit(e)}>
-      <h1 style={{ margin: 0, fontSize: '1.35rem' }}>
-        {mode === 'register' ? 'Crear cuenta' : 'Iniciar sesión'}
-      </h1>
-      <p style={hint}>
-        Email y contraseña sin confirmación por correo. En esta beta{' '}
-        <strong>no hay recuperación de contraseña por email</strong>.
-      </p>
-
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <button
-          type="button"
-          style={mode === 'register' ? btnPrimary : btnGhost}
-          onClick={() => setMode('register')}
+    <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <form
+          onSubmit={(e) => void submit(e)}
+          className="lg:col-span-7 bg-[#0D1612] border border-[#1D3026] rounded-2xl p-6 sm:p-8 space-y-6"
         >
-          Registro
-        </button>
-        <button
-          type="button"
-          style={mode === 'login' ? btnPrimary : btnGhost}
-          onClick={() => setMode('login')}
-        >
-          Entrar
-        </button>
-      </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/[0.06]">
+            <div>
+              <p className="text-xs font-mono-tech text-[#12D6B0]">IDENTIDAD CIUDADANA · /acceso</p>
+              <h1 className="text-2xl font-display font-semibold text-[#F0F5F2] mt-1">
+                {mode === 'register' ? 'Crear cuenta pública' : 'Acceder a tu cuenta'}
+              </h1>
+            </div>
+            <div
+              role="group"
+              aria-label="Modo de acceso"
+              className="inline-flex p-1 rounded-xl bg-[#070D0A] border border-[#1D3026]"
+            >
+              <button
+                type="button"
+                onClick={() => setMode('register')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  mode === 'register'
+                    ? 'bg-[#13201A] text-[#7CE83A]'
+                    : 'text-[#98ABA2] hover:text-[#F0F5F2]'
+                }`}
+              >
+                Registro
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('login')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  mode === 'login'
+                    ? 'bg-[#13201A] text-[#7CE83A]'
+                    : 'text-[#98ABA2] hover:text-[#F0F5F2]'
+                }`}
+              >
+                Entrar
+              </button>
+            </div>
+          </div>
 
-      <label>
-        <span style={{ display: 'block', marginBottom: 4, fontSize: '0.875rem', fontWeight: 600 }}>
-          Email
-        </span>
-        <input
-          style={inputStyle}
-          type="email"
-          value={email}
-          onChange={(ev) => setEmail(ev.target.value)}
-          autoComplete="email"
-          required
-        />
-      </label>
+          <p className="text-sm text-[#98ABA2] leading-relaxed">
+            Email y contraseña sin confirmación por correo. En esta beta{' '}
+            <strong className="text-[#F0F5F2]">no hay recuperación de contraseña por email</strong>.
+          </p>
 
-      <label>
-        <span style={{ display: 'block', marginBottom: 4, fontSize: '0.875rem', fontWeight: 600 }}>
-          Contraseña
-        </span>
-        <input
-          style={inputStyle}
-          type="password"
-          value={password}
-          onChange={(ev) => setPassword(ev.target.value)}
-          autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-          minLength={8}
-          required
-        />
-      </label>
+          <div className="flex items-start gap-2 rounded-xl bg-[#13201A] border border-[#F5A623]/30 px-3 py-2.5">
+            <Lock className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" />
+            <p className="text-xs text-[#F5A623] leading-snug">
+              Guarda tu contraseña en un gestor seguro: ActivList no ofrece reset por correo en beta.
+            </p>
+          </div>
 
-      {mode === 'register' && (
-        <>
-          <label>
-            <span style={{ display: 'block', marginBottom: 4, fontSize: '0.875rem', fontWeight: 600 }}>
-              Alias público
-            </span>
+          {mode === 'register' && (
+            <label className="block space-y-1.5">
+              <span className="text-xs font-semibold text-[#F0F5F2]">Alias público</span>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5E7369] font-mono-tech text-sm">
+                  @
+                </span>
+                <input
+                  className={`${fieldClass} pl-7`}
+                  value={alias}
+                  onChange={(ev) => setAlias(ev.target.value)}
+                  autoComplete="nickname"
+                  required
+                />
+              </div>
+              <span className="text-xs text-[#5E7369]">{ALIAS_RULE}</span>
+            </label>
+          )}
+
+          <label className="block space-y-1.5">
+            <span className="text-xs font-semibold text-[#F0F5F2]">Email</span>
             <input
-              style={inputStyle}
-              value={alias}
-              onChange={(ev) => setAlias(ev.target.value)}
-              autoComplete="nickname"
+              className={fieldClass}
+              type="email"
+              value={email}
+              onChange={(ev) => setEmail(ev.target.value)}
+              autoComplete="email"
               required
             />
-            <span style={hint}>{ALIAS_RULE}</span>
           </label>
-          <label
-            style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', fontSize: '0.875rem' }}
-          >
+
+          <label className="block space-y-1.5">
+            <span className="text-xs font-semibold text-[#F0F5F2]">Contraseña</span>
             <input
-              type="checkbox"
-              checked={adult}
-              onChange={(ev) => setAdult(ev.target.checked)}
+              className={fieldClass}
+              type="password"
+              value={password}
+              onChange={(ev) => setPassword(ev.target.value)}
+              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+              minLength={8}
+              required
             />
-            <span>
-              Declaro que tengo <strong>18 años o más</strong>.
-            </span>
           </label>
-        </>
-      )}
 
-      <TurnstileBox onToken={setCaptcha} resetKey={captchaKey} />
+          {mode === 'register' && (
+            <label className="flex gap-3 items-start text-sm text-[#F0F5F2]">
+              <input
+                type="checkbox"
+                checked={adult}
+                onChange={(ev) => setAdult(ev.target.checked)}
+                className="mt-1 accent-[#7CE83A]"
+              />
+              <span>
+                Declaro que tengo <strong>18 años o más</strong> y resido en España.
+              </span>
+            </label>
+          )}
 
-      {error && (
-        <div style={errBox} role="alert">
-          {error}
-        </div>
-      )}
+          <TurnstileBox onToken={setCaptcha} resetKey={captchaKey} />
 
-      <button type="submit" style={btnPrimary} disabled={busy}>
-        {busy ? 'Espera…' : mode === 'register' ? 'Registrarme' : 'Entrar'}
-      </button>
-    </form>
+          {error && (
+            <div
+              role="alert"
+              className="rounded-xl bg-[#161214] border border-[#F26457]/40 px-4 py-3 text-sm text-[#F26457]"
+            >
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full min-h-[48px] rounded-xl bg-[#7CE83A] hover:bg-[#92F252] text-[#070D0A] font-semibold text-sm transition-colors disabled:opacity-50"
+          >
+            {busy
+              ? 'Espera…'
+              : mode === 'register'
+                ? 'Crear cuenta y continuar'
+                : 'Entrar en ActivList'}
+          </button>
+        </form>
+
+        <aside className="lg:col-span-5 space-y-4">
+          <div className="rounded-2xl bg-[#0D1612] border border-[#1D3026] p-6 space-y-3">
+            <p className="text-xs font-mono-tech text-[#12D6B0]">QUÉ OBTIENES</p>
+            <h2 className="text-lg font-display font-semibold text-[#F0F5F2]">
+              Alias público, evidencia privada
+            </h2>
+            <ul className="space-y-2 text-sm text-[#98ABA2]">
+              <li>· Registrar reciclaje (+10) o recogida (+20) con foto saneada</li>
+              <li>· Apoyar publicaciones del feed (0 pts)</li>
+              <li>· Aparecer en el ranking histórico municipal</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
   )
 }

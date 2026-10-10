@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Camera, ImageIcon } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../identity/AuthPage'
+import { setLastContributionId } from '../shell/lastContribution'
 import {
   uploadEvidence,
   type CaptureOrigin,
@@ -19,56 +21,38 @@ import {
 
 const POLL_MS = 4000
 
-const card: CSSProperties = {
-  padding: '1.25rem',
-  borderRadius: '0.75rem',
-  background: '#fff',
-  border: '1px solid #e7e5e4',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.85rem',
+function statusBorder(status: OwnContribution['status']): string {
+  switch (status) {
+    case 'PENDING':
+      return 'border-[#22D3EE]/50'
+    case 'APPROVED':
+      return 'border-[#2EE58D]/50'
+    case 'NEEDS_EVIDENCE':
+      return 'border-[#F5A623]/50'
+    case 'REJECTED':
+      return 'border-[#F26457]/50'
+    case 'TECHNICAL_ERROR':
+      return 'border-[#22D3EE]/40'
+    default:
+      return 'border-[#1D3026]'
+  }
 }
 
-const hint: CSSProperties = {
-  fontSize: '0.85rem',
-  color: '#78716c',
-  lineHeight: 1.45,
-  margin: 0,
-}
-
-const errBox: CSSProperties = {
-  padding: '0.65rem 0.75rem',
-  borderRadius: '0.5rem',
-  background: '#fef2f2',
-  color: '#991b1b',
-  fontSize: '0.875rem',
-}
-
-const btnPrimary: CSSProperties = {
-  border: 'none',
-  borderRadius: '0.5rem',
-  padding: '0.6rem 1rem',
-  background: '#16a34a',
-  color: '#fff',
-  fontWeight: 700,
-  cursor: 'pointer',
-}
-
-const btnGhost: CSSProperties = {
-  border: '1px solid #d6d3d1',
-  borderRadius: '0.5rem',
-  padding: '0.55rem 0.85rem',
-  background: '#fff',
-  color: '#44403c',
-  fontWeight: 600,
-  cursor: 'pointer',
-  fontSize: '0.85rem',
-}
-
-const btnDanger: CSSProperties = {
-  ...btnGhost,
-  borderColor: '#fecaca',
-  color: '#991b1b',
+function statusKicker(status: OwnContribution['status']): string {
+  switch (status) {
+    case 'PENDING':
+      return 'ANALIZANDO TRAMA ÓPTICA'
+    case 'APPROVED':
+      return 'INDICIOS VALIDADOS'
+    case 'NEEDS_EVIDENCE':
+      return 'SE REQUIERE NUEVA EVIDENCIA'
+    case 'REJECTED':
+      return 'NO SUPERÓ LA EVALUACIÓN'
+    case 'TECHNICAL_ERROR':
+      return 'ERROR TÉCNICO DE VALIDACIÓN'
+    case 'CANCELLED':
+      return 'ENVÍO CANCELADO'
+  }
 }
 
 export default function ContributionStatus() {
@@ -89,7 +73,6 @@ export default function ContributionStatus() {
         setError(null)
       } catch (e) {
         if (e instanceof DOMException && e.name === 'AbortError') return
-        // Fallo de red/404: error técnico, nunca APPROVED ficticio.
         setError(statusErrorMessage(e))
       }
     },
@@ -97,9 +80,12 @@ export default function ContributionStatus() {
   )
 
   useEffect(() => {
+    if (id) setLastContributionId(id)
+  }, [id])
+
+  useEffect(() => {
     if (authStatus !== 'ready' || !id) return
     const ctrl = new AbortController()
-    // refresh() es async: setState tras await, no síncrono en el efecto.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial del estado
     void refresh(ctrl.signal)
     return () => ctrl.abort()
@@ -114,7 +100,7 @@ export default function ContributionStatus() {
   }, [item, refresh])
 
   if (authStatus === 'loading') {
-    return <p style={{ textAlign: 'center', color: '#78716c' }}>Cargando sesión…</p>
+    return <p className="text-center text-[#98ABA2] py-16 text-sm">Cargando sesión…</p>
   }
   if (authStatus !== 'ready') {
     return <Navigate to="/acceso" replace state={{ from: `/contribuciones/${id}` }} />
@@ -167,57 +153,89 @@ export default function ContributionStatus() {
     }
   }
 
+  const scanning = item?.status === 'PENDING'
+
   return (
-    <section style={card}>
-      <h1 style={{ margin: 0, fontSize: '1.35rem' }}>Estado de la contribución</h1>
-      <p style={hint}>
-        ID: <code style={{ fontSize: '0.8rem' }}>{id}</code>
-      </p>
+    <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-6">
+      <div className="pb-6 border-b border-white/[0.08]">
+        <p className="text-xs font-mono-tech text-[#12D6B0]">INSPECTOR IA · /contribuciones</p>
+        <h1 className="text-2xl sm:text-3xl font-display font-semibold text-[#F0F5F2] mt-1">
+          Estado de la contribución
+        </h1>
+        <p className="text-xs font-mono-tech text-[#5E7369] mt-2">ID · {id}</p>
+      </div>
 
       {!item && !error && (
-        <p style={hint}>Consultando estado…</p>
+        <p className="text-sm text-[#98ABA2]">Consultando estado…</p>
       )}
 
       {item && (
-        <>
-          <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>
-            {statusLabel(item.status)}
-          </p>
-          {item.reason && <p style={hint}>Motivo: {item.reason}</p>}
-          <p style={hint}>
-            Enviada: {new Date(item.submittedAt).toLocaleString('es-ES')}
-            {item.approvedAt
-              ? ` · Aprobada: ${new Date(item.approvedAt).toLocaleString('es-ES')}`
-              : ''}
-          </p>
-          <p style={hint}>
-            Puntos efectivos (servidor): <strong>{item.effectivePoints}</strong> — el cliente no
-            suma puntos. Polling activo solo en estados no finales.
-          </p>
+        <div
+          className={`relative rounded-2xl bg-[#0D1612] border ${statusBorder(item.status)} p-6 sm:p-8 space-y-5 overflow-hidden`}
+        >
+          {scanning && (
+            <div className="absolute inset-x-0 top-0 h-full pointer-events-none overflow-hidden opacity-40">
+              <div className="h-16 w-full bg-gradient-to-b from-transparent via-[#22D3EE]/50 to-transparent animate-vision-scan" />
+              <div className="absolute inset-0 bg-sensor-grid" />
+            </div>
+          )}
+
+          <div className="relative space-y-2">
+            <p className="text-xs font-mono-tech text-[#12D6B0]">{statusKicker(item.status)}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-xl font-display font-semibold text-[#F0F5F2]">
+                {statusLabel(item.status)}
+              </h2>
+              {item.status === 'APPROVED' && (
+                <span className="font-mono-tech text-xs font-semibold text-[#2EE58D] px-2 py-1 rounded bg-[#2EE58D]/10 border border-[#2EE58D]/30">
+                  +{item.effectivePoints} PTS
+                </span>
+              )}
+            </div>
+            {item.reason && (
+              <p className="text-sm text-[#98ABA2]">Motivo: {item.reason}</p>
+            )}
+            <p className="text-xs text-[#5E7369]">
+              Enviada: {new Date(item.submittedAt).toLocaleString('es-ES')}
+              {item.approvedAt
+                ? ` · Aprobada: ${new Date(item.approvedAt).toLocaleString('es-ES')}`
+                : ''}
+            </p>
+            <p className="text-xs text-[#98ABA2]">
+              Puntos efectivos (servidor):{' '}
+              <strong className="font-mono-tech text-[#F0F5F2]">{item.effectivePoints}</strong> — el
+              cliente no suma puntos.
+            </p>
+          </div>
 
           {!isTerminalStatus(item.status) && item.canProvideEvidence && (
-            <form onSubmit={(ev) => void onEvidence(ev)} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Aportar evidencia</span>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <label style={{ ...btnGhost, cursor: 'pointer' }}>
+            <form
+              onSubmit={(ev) => void onEvidence(ev)}
+              className="relative space-y-3 pt-4 border-t border-white/[0.06]"
+            >
+              <p className="text-xs font-semibold text-[#F0F5F2]">Aportar evidencia</p>
+              <div className="flex flex-wrap gap-2">
+                <label className="min-h-[44px] px-4 rounded-xl bg-[#13201A] border border-[#1D3026] text-xs font-medium text-[#F0F5F2] inline-flex items-center gap-2 cursor-pointer">
+                  <Camera className="w-3.5 h-3.5" />
                   Cámara
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     capture="environment"
-                    style={{ display: 'none' }}
+                    className="hidden"
                     onChange={(ev) => {
                       setFile(ev.target.files?.[0] ?? null)
                       setCaptureOrigin('CAMERA_FLOW')
                     }}
                   />
                 </label>
-                <label style={{ ...btnGhost, cursor: 'pointer' }}>
+                <label className="min-h-[44px] px-4 rounded-xl bg-[#13201A] border border-[#1D3026] text-xs font-medium text-[#F0F5F2] inline-flex items-center gap-2 cursor-pointer">
+                  <ImageIcon className="w-3.5 h-3.5" />
                   Galería
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
-                    style={{ display: 'none' }}
+                    className="hidden"
                     onChange={(ev) => {
                       setFile(ev.target.files?.[0] ?? null)
                       setCaptureOrigin('GALLERY')
@@ -225,37 +243,74 @@ export default function ContributionStatus() {
                   />
                 </label>
               </div>
-              {file && <p style={hint}>{file.name}</p>}
-              <button type="submit" style={btnPrimary} disabled={busy}>
+              {file && <p className="text-xs text-[#5E7369]">{file.name}</p>}
+              <button
+                type="submit"
+                disabled={busy}
+                className="min-h-[44px] px-5 rounded-xl bg-[#F5A623] hover:bg-[#f7b44a] text-[#070D0A] text-xs font-semibold disabled:opacity-50"
+              >
                 {busy ? 'Enviando…' : 'Enviar evidencia'}
               </button>
             </form>
           )}
 
           {!isTerminalStatus(item.status) && (
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div className="relative flex flex-wrap gap-3 pt-2">
               {item.canRetry && (
-                <button type="button" style={btnPrimary} disabled={busy} onClick={() => void onRetry()}>
-                  Reintentar
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void onRetry()}
+                  className="min-h-[44px] px-5 rounded-xl bg-[#7CE83A] hover:bg-[#92F252] text-[#070D0A] text-xs font-semibold disabled:opacity-50"
+                >
+                  Reintentar validación IA
                 </button>
               )}
               {item.canCancel && (
-                <button type="button" style={btnDanger} disabled={busy} onClick={() => void onCancel()}>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void onCancel()}
+                  className="min-h-[44px] px-5 rounded-xl border border-[#F26457]/40 text-[#F26457] text-xs font-semibold hover:bg-[#F26457]/10 disabled:opacity-50"
+                >
                   Cancelar envío
                 </button>
               )}
             </div>
           )}
-        </>
+
+          {item.status === 'APPROVED' && (
+            <div className="relative flex flex-wrap gap-3 pt-2">
+              <Link
+                to="/"
+                className="min-h-[44px] px-5 rounded-xl bg-[#7CE83A] hover:bg-[#92F252] text-[#070D0A] text-xs font-semibold inline-flex items-center"
+              >
+                Ver feed
+              </Link>
+              <Link
+                to="/ranking"
+                className="min-h-[44px] px-5 rounded-xl bg-[#13201A] border border-[#1D3026] text-[#F0F5F2] text-xs font-medium inline-flex items-center"
+              >
+                Ver ranking
+              </Link>
+            </div>
+          )}
+        </div>
       )}
 
       {error && (
-        <div style={errBox} role="alert">
+        <div
+          role="alert"
+          className="rounded-xl bg-[#161214] border border-[#F26457]/40 px-4 py-3 text-sm text-[#F26457]"
+        >
           {error}
         </div>
       )}
 
-      <Link to="/contribuir" style={{ ...btnGhost, textDecoration: 'none', display: 'inline-block' }}>
+      <Link
+        to="/contribuir"
+        className="inline-flex min-h-[44px] px-5 items-center rounded-xl bg-[#13201A] border border-[#1D3026] text-xs font-medium text-[#F0F5F2] hover:border-[#2A4537]"
+      >
         Nueva contribución
       </Link>
     </section>

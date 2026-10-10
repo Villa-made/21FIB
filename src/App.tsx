@@ -1,240 +1,247 @@
-import type { CSSProperties } from 'react'
+import { useState } from 'react'
+import {
+  AlertCircle,
+  Compass,
+  Layers,
+  PlusCircle,
+  Trophy,
+  User,
+  X,
+} from 'lucide-react'
 import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import FeedPage from './features/community/FeedPage'
 import ContributionForm from './features/contributions/ContributionForm'
 import ContributionStatus from './features/contributions/ContributionStatus'
 import AuthPage, { AuthProvider, useAuth } from './features/identity/AuthPage'
 import LeaderboardPage from './features/scoring/LeaderboardPage'
+import ComingSoonPage from './features/shell/ComingSoonPage'
+import EstadoPage from './features/shell/EstadoPage'
 
-/** Overrides de plantilla Vite + nav responsive (sin tocar index.css ajeno). */
-const SHELL_CSS = `
-#root {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  text-align: initial;
-  border-inline: none;
-  min-height: 100svh;
-}
-.app-mobile-nav a {
-  min-height: 48px;
-  touch-action: manipulation;
-  justify-content: center;
-  box-sizing: border-box;
-}
-@media (max-width: 719px) {
-  .nav-desktop { display: none !important; }
-  .app-main { padding-bottom: 5.75rem; }
-}
-@media (min-width: 720px) {
-  .app-mobile-nav { display: none !important; }
-  .app-main { padding-bottom: 1.25rem; }
-}
-`
-
-const shell: CSSProperties = {
-  minHeight: '100svh',
-  display: 'flex',
-  flexDirection: 'column',
-  fontFamily: 'system-ui, Segoe UI, sans-serif',
-  color: '#1c1917',
-  background: '#fafaf9',
-  textAlign: 'left',
-  width: '100%',
+export interface CalmToast {
+  id: string
+  code?: number
+  title: string
+  message: string
+  tone: 'info' | 'warning' | 'success'
 }
 
-const header: CSSProperties = {
-  position: 'sticky',
-  top: 0,
-  zIndex: 10,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: '0.75rem',
-  padding: '0.75rem 1rem',
-  borderBottom: '1px solid #e7e5e4',
-  background: 'rgba(255,255,255,0.92)',
-  backdropFilter: 'blur(8px)',
-}
-
-const brand: CSSProperties = {
-  fontWeight: 800,
-  fontSize: '1.125rem',
-  color: '#15803d',
-  textDecoration: 'none',
-  flexShrink: 0,
-}
-
-const navDesktop: CSSProperties = {
-  display: 'flex',
-  gap: '0.25rem',
-  flexWrap: 'wrap',
-}
-
-const main: CSSProperties = {
-  width: '100%',
-  maxWidth: '42rem',
-  margin: '0 auto',
-  flex: 1,
-  padding: '1.25rem 1rem',
-  boxSizing: 'border-box',
-}
-
-const mobileNav: CSSProperties = {
-  position: 'fixed',
-  left: 0,
-  right: 0,
-  bottom: 0,
-  zIndex: 20,
-  display: 'grid',
-  gridTemplateColumns: 'repeat(4, 1fr)',
-  borderTop: '1px solid #e7e5e4',
-  background: '#fff',
-  paddingBottom: 'env(safe-area-inset-bottom)',
-  minHeight: '48px',
-}
-
-const linkBtn: CSSProperties = {
-  borderRadius: '0.5rem',
-  padding: '0.5rem 0.75rem',
-  background: '#16a34a',
-  color: '#fff',
-  fontWeight: 700,
-  textDecoration: 'none',
-  fontSize: '0.875rem',
-  minHeight: '44px',
-  display: 'inline-flex',
-  alignItems: 'center',
-  touchAction: 'manipulation',
-  boxSizing: 'border-box',
-}
-
-const ghostBtn: CSSProperties = {
-  border: 'none',
-  background: 'transparent',
-  color: '#57534e',
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-  padding: '0.5rem 0.6rem',
-  minHeight: '44px',
-  touchAction: 'manipulation',
-}
-
-const NAV = [
-  { to: '/', label: 'Feed', end: true },
-  { to: '/contribuir', label: 'Contribuir', end: false },
+const DESKTOP_NAV = [
+  { to: '/', label: 'Comunidad', end: true },
   { to: '/ranking', label: 'Ranking', end: false },
+  { to: '/estado', label: 'Estado IA', end: false },
   { to: '/acceso', label: 'Acceso', end: false },
 ] as const
 
-function navStyle(isActive: boolean): CSSProperties {
-  return {
-    borderRadius: '0.5rem',
-    padding: '0.5rem 0.75rem',
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    textDecoration: 'none',
-    color: isActive ? '#15803d' : '#57534e',
-    background: isActive ? '#f0fdf4' : 'transparent',
-    minHeight: '44px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    touchAction: 'manipulation',
-    boxSizing: 'border-box',
-  }
-}
+const MOBILE_NAV = [
+  { to: '/', label: 'Feed', end: true, Icon: Compass },
+  { to: '/contribuir', label: 'Contribuir', end: false, Icon: PlusCircle },
+  { to: '/estado', label: 'Estado IA', end: false, Icon: Layers },
+  { to: '/ranking', label: 'Ranking', end: false, Icon: Trophy },
+  { to: '/acceso', label: 'Acceso', end: false, Icon: User },
+] as const
 
-function mobileNavStyle(isActive: boolean): CSSProperties {
-  return {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.15rem',
-    padding: '0.5rem 0.25rem',
-    fontSize: '0.7rem',
-    fontWeight: 600,
-    textDecoration: 'none',
-    color: isActive ? '#15803d' : '#78716c',
-    minHeight: '48px',
-    touchAction: 'manipulation',
-  }
-}
-
-function HeaderAuth() {
+function HeaderAuth({
+  onToast,
+}: {
+  onToast: (t: Omit<CalmToast, 'id'>) => void
+}) {
   const { status, profile, signOut } = useAuth()
+
   if (status === 'ready' && profile) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-        <span style={{ fontWeight: 600, maxWidth: '9rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <div className="hidden md:flex items-center gap-2 text-sm">
+        <span className="font-mono-tech text-[#F0F5F2] max-w-[9rem] truncate">
           @{profile.alias}
         </span>
-        <button type="button" style={ghostBtn} onClick={() => void signOut()}>
+        <button
+          type="button"
+          className="min-h-[38px] px-3 text-xs text-[#98ABA2] hover:text-[#F0F5F2] transition-colors"
+          onClick={() => {
+            void signOut().then(() =>
+              onToast({
+                title: 'Has cerrado tu sesión',
+                message: 'Navegas en modo visitante público.',
+                tone: 'info',
+              }),
+            )
+          }}
+        >
           Salir
         </button>
       </div>
     )
   }
+
   if (status === 'needs-profile') {
     return (
-      <Link to="/acceso" style={{ ...linkBtn, background: '#f59e0b', color: '#78350f' }}>
-        Completa tu perfil
+      <Link
+        to="/acceso"
+        className="min-h-[38px] px-4 py-2 text-xs font-semibold rounded-lg bg-[#F5A623] text-[#070D0A] hover:bg-[#f7b44a] transition-colors whitespace-nowrap"
+      >
+        Completa perfil
       </Link>
     )
   }
+
   if (status === 'anonymous') {
     return (
-      <Link to="/acceso" style={linkBtn}>
+      <Link
+        to="/acceso"
+        className="md:hidden min-h-[38px] px-4 py-2 text-xs font-semibold text-[#070D0A] bg-[#7CE83A] hover:bg-[#92F252] rounded-lg transition-colors"
+      >
         Entrar
       </Link>
     )
   }
+
   return null
 }
 
 function ShellLayout() {
+  const [toast, setToast] = useState<CalmToast | null>(null)
+
+  const showToast = (next: Omit<CalmToast, 'id'>) => {
+    setToast({ ...next, id: String(Date.now()) })
+  }
+
   return (
-    <div style={shell}>
-      <style>{SHELL_CSS}</style>
-      <header style={header}>
-        <Link to="/" style={brand}>
-          21FIB
+    <div className="min-h-svh flex flex-col bg-[#070D0A] text-[#F0F5F2] font-sans pb-16 md:pb-0">
+      <header className="sticky top-0 z-40 h-14 flex items-center justify-between gap-3 px-4 sm:px-6 bg-[#0D1612]/92 backdrop-blur-md border-b border-white/[0.08]">
+        <Link
+          to="/"
+          className="font-display font-bold text-sm sm:text-base text-[#F0F5F2] tracking-tight shrink-0 hover:text-[#7CE83A] transition-colors"
+        >
+          ActivList
         </Link>
-        <nav style={navDesktop} aria-label="Principal" className="nav-desktop">
-          {NAV.map((item) => (
+
+        <nav
+          aria-label="Principal"
+          className="hidden md:flex items-center gap-5 text-xs font-medium text-[#98ABA2]"
+        >
+          {DESKTOP_NAV.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
-              style={({ isActive }) => navStyle(isActive)}
+              className={({ isActive }) =>
+                `py-1 transition-colors whitespace-nowrap shrink-0 ${
+                  isActive
+                    ? 'text-[#F0F5F2] underline decoration-[#7CE83A] decoration-2 underline-offset-8'
+                    : 'hover:text-[#F0F5F2]'
+                }`
+              }
             >
               {item.label}
             </NavLink>
           ))}
         </nav>
-        <HeaderAuth />
+
+        <div className="flex items-center gap-2 shrink-0">
+          <HeaderAuth onToast={showToast} />
+          <Link
+            to="/contribuir"
+            className="min-h-[38px] px-4 py-2 text-xs font-semibold text-[#070D0A] bg-[#7CE83A] hover:bg-[#92F252] rounded-lg transition-colors whitespace-nowrap"
+          >
+            Registrar acción
+          </Link>
+        </div>
       </header>
 
-      <main style={main} className="app-main">
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-16 right-4 z-50 max-w-sm w-[calc(100%-2rem)] bg-[#0D1612] border border-[#1D3026] shadow-2xl rounded-xl p-4 flex items-start justify-between gap-3"
+        >
+          <div className="flex items-start gap-3">
+            <AlertCircle
+              className={`w-4 h-4 shrink-0 mt-0.5 ${
+                toast.tone === 'success'
+                  ? 'text-[#2EE58D]'
+                  : toast.tone === 'warning'
+                    ? 'text-[#F5A623]'
+                    : 'text-[#22D3EE]'
+              }`}
+            />
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                {toast.code != null && (
+                  <span className="font-mono-tech text-[11px] text-[#12D6B0]">
+                    HTTP {toast.code}
+                  </span>
+                )}
+                <p className="text-xs font-semibold text-[#F0F5F2]">{toast.title}</p>
+              </div>
+              <p className="text-xs text-[#98ABA2] leading-snug">{toast.message}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            className="text-[#98ABA2] hover:text-[#F0F5F2] p-1"
+            aria-label="Cerrar aviso"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      <main className="flex-1 w-full">
         <Routes>
           <Route index element={<FeedPage />} />
           <Route path="ranking" element={<LeaderboardPage />} />
           <Route path="contribuir" element={<ContributionForm />} />
           <Route path="contribuciones/:id" element={<ContributionStatus />} />
           <Route path="acceso" element={<AuthPage />} />
+          <Route path="estado" element={<EstadoPage />} />
+          <Route
+            path="privacidad"
+            element={
+              <ComingSoonPage
+                title="Privacidad y contacto de retirada"
+                kicker="LEGAL · /privacidad"
+              />
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
-      <nav style={mobileNav} aria-label="Principal móvil" className="app-mobile-nav">
-        {NAV.map((item) => (
+      <footer className="border-t border-white/[0.08] bg-[#070D0A] py-10 px-4 sm:px-8 mt-16 mb-4 md:mb-0">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 text-xs text-[#98ABA2]">
+          <div className="space-y-1">
+            <p className="font-display font-bold text-[#F0F5F2] text-sm">ActivList</p>
+            <p className="text-[#5E7369]">
+              Registro ciudadano de acción ambiental en España · La IA evalúa indicios visuales, no
+              certifica impacto absoluto.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-6">
+            <Link to="/privacidad" className="hover:text-[#F0F5F2] transition-colors">
+              Privacidad y contacto de retirada
+            </Link>
+            <span className="font-mono-tech text-[#5E7369]">retirada@activlist.es</span>
+          </div>
+        </div>
+      </footer>
+
+      <nav
+        aria-label="Navegación móvil inferior"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-[#0D1612]/95 backdrop-blur-md border-t border-white/[0.08] grid grid-cols-5 items-center px-1 pb-[env(safe-area-inset-bottom)]"
+      >
+        {MOBILE_NAV.map(({ to, label, end, Icon }) => (
           <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            style={({ isActive }) => mobileNavStyle(isActive)}
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) =>
+              `min-h-[44px] flex flex-col items-center justify-center gap-1 touch-manipulation ${
+                isActive ? 'text-[#7CE83A]' : 'text-[#98ABA2]'
+              }`
+            }
           >
-            {item.label}
+            <Icon className="w-5 h-5" />
+            <span className="text-[10px] font-medium tracking-tight">{label}</span>
           </NavLink>
         ))}
       </nav>
