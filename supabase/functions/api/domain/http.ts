@@ -1,5 +1,21 @@
 import type { ErrorBody, ErrorCode } from './contracts.ts';
 
+/** A domain failure that can be returned to the API client without leaking internals. */
+export class ApiError extends Error {
+  readonly details: Record<string, unknown>;
+
+  constructor(
+    readonly status: number,
+    readonly code: ErrorCode,
+    message: string,
+    details: Record<string, unknown> = {},
+  ) {
+    super(message);
+    this.name = 'ApiError';
+    this.details = details;
+  }
+}
+
 export function json(body: unknown, status = 200, headers: HeadersInit = {}): Response {
   const h = new Headers(headers);
   h.set('Content-Type', 'application/json; charset=utf-8');

@@ -1,5 +1,5 @@
 import { ERROR_CODES } from './domain/contracts.ts';
-import { corsHeaders, httpError, parseAllowedOrigins, withCors } from './domain/http.ts';
+import { ApiError, corsHeaders, httpError, parseAllowedOrigins, withCors } from './domain/http.ts';
 
 // Supabase keeps the function name in the path: a call to
 // https://<project>.supabase.co/functions/v1/api/v1/... reaches this function as /api/v1/...
@@ -41,6 +41,9 @@ export function createHandler(routes: Route[]): (req: Request) => Promise<Respon
       }
       return withCors(httpError(404, ERROR_CODES.NOT_FOUND, 'Recurso no encontrado'), cors);
     } catch (err) {
+      if (err instanceof ApiError) {
+        return withCors(httpError(err.status, err.code, err.message, err.details), cors);
+      }
       // Never expose the stack or the internal message; log only the error class.
       console.error('unhandled error', err instanceof Error ? err.name : typeof err);
       return withCors(httpError(500, ERROR_CODES.INTERNAL, 'Error interno'), cors);
