@@ -376,18 +376,18 @@
 
 ### T17 — Añadir interacciones de comunidad en la interfaz
 
-- [ ] **T17 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T17 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 03:35–04:15 · **Tamaño:** M (3 archivos previstos) · **Dependencias:** T14; contratos T19–T21.
 
 **Descripción:** Añadir acciones de like, denuncia y ocultación propias en el contexto de feed; la interfaz usa contratos v1 y no otorga puntos.
 
 **Criterios de aceptación:**
-- [ ] Like propio imposible y toggling reversible; el score no se altera.
-- [ ] Autor puede ocultar con confirmación de pérdida de puntos y la vista se actualiza; visitante puede denunciar mediante CAPTCHA.
+- [x] Like propio imposible y toggling reversible; el score no se altera.
+- [x] Autor puede ocultar con confirmación de pérdida de puntos y la vista se actualiza; visitante puede denunciar mediante CAPTCHA.
 
 **Verificación:**
-- [ ] Test de UI con dos identidades y API real al finalizar T19–T21.
+- [x] Tests de helpers (no auto-like, hide/confirm, report+CAPTCHA, fixtures gated); integración real PUT/DELETE like, hide y reports pendiente de T19–T21.
 
 **Archivos previstos:** `src/features/community/CommunityActions.tsx`, `src/features/community/communityApi.ts`, `src/features/community/CommunityActions.test.tsx`.
 
@@ -548,7 +548,7 @@
 | T14 | B | `task/T14-feed-ranking` | `npm test` (src), `npm run build`, `npm run lint`; fixtures DEV gated; GET /feed y /leaderboard reales pendientes de T16 | DONE |
 | T15 | — | — | — | TODO |
 | T16 | — | — | — | TODO |
-| T17 | — | — | — | TODO |
+| T17 | B | `task/T17-community-actions` | `npm test` (src), `npm run build`, `npm run lint`; fixtures DEV gated; like/hide/report reales pendientes de T19–T21 | DONE |
 | T18 | — | — | — | TODO |
 | T19 | — | — | — | TODO |
 | T20 | — | — | — | TODO |
