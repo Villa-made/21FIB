@@ -27,3 +27,5 @@ package-lock.json
 # Environment files (keep only the example)
 .env*
 !.env.example
+
+tests/ai/*
