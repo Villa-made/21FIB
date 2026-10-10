@@ -104,6 +104,19 @@ export function contributionRoutes(deps: ContributionRouteDeps): Route[] {
       return json(toContributionDto(await ownRow(db, params.id, user.userId), nowFn()), 200);
     },
   }, {
+    // T19: hide an own APPROVED contribution (revokes its points and feed visibility; idempotent).
+    method: 'POST',
+    path: '/contributions/:id/hide',
+    handler: async (req, params) => {
+      const user = await requireUser(req, deps.verifier);
+      const db = deps.db();
+      await requireProfile(user.userId, db);
+      await ownRow(db, params.id, user.userId);
+      const { error } = await db.rpc('hide_contribution', { p_id: params.id, p_author: user.userId });
+      if (error) throw mapCommandRpcError(error);
+      return json(toContributionDto(await ownRow(db, params.id, user.userId), nowFn()), 200);
+    },
+  }, {
     method: 'POST',
     path: '/contributions/:id/retry',
     handler: async (req, params) => {
