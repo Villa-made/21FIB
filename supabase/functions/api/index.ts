@@ -2,12 +2,11 @@ import { ERROR_CODES } from './domain/contracts.ts';
 import { createSupabaseTokenVerifier } from './domain/auth.ts';
 import { createServiceClient } from './domain/db.ts';
 import { ApiError, corsHeaders, httpError, parseAllowedOrigins, withCors } from './domain/http.ts';
+import { createProductionValidator } from './domain/production-ports.ts';
 import { evidenceInspector } from './media/evidence.ts';
+import { evidenceSanitizer } from './media/sanitize.ts';
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.117.3';
 import {
-  type EvidenceInspector,
-  type EvidenceSanitizer,
-  type EvidenceValidator,
   supabaseEvidenceStorage,
   supabasePublishedStorage,
   supabaseValidationRepository,
@@ -36,47 +35,28 @@ export interface Route {
 // Dependencies remain lazy: createServiceClient() reads secrets only inside route handlers.
 const productionDeps = { verifier: createSupabaseTokenVerifier(), db: createServiceClient };
 
-// Temporal hasta T09 de C: media/evidence.ts aún no existe. Falla cerrado: sin inspector EXIF real no se
-// acepta ninguna foto (el router lo convierte en 500 sin detalles). Nunca sustituirlo por uno permisivo.
-const failClosedInspector: EvidenceInspector = {
-  inspect() {
-    throw new Error('EXIF inspector not available');
-  },
-};
-
-// Temporal hasta T06/T09 de C (ai/validator.ts, media/): fallan cerrado. Cada validación acaba en
-// TECHNICAL_ERROR, nunca en APPROVED. Se sustituyen en T13.d; jamás por un validador que apruebe.
-const failClosedValidator: EvidenceValidator = {
-  validate() {
-    return Promise.reject(new Error('AI validator not available'));
-  },
-};
-const failClosedSanitizer: EvidenceSanitizer = {
-  sanitize() {
-    return Promise.reject(new Error('Image sanitizer not available'));
-  },
-};
-
 const productionValidationPorts = (db: SupabaseClient): ValidationPorts => ({
   repository: supabaseValidationRepository(db),
   evidenceStorage: supabaseEvidenceStorage(db),
   publishedStorage: supabasePublishedStorage(db),
-  validator: failClosedValidator,
-  sanitizer: failClosedSanitizer,
+  validator: createProductionValidator(),
+  sanitizer: evidenceSanitizer,
 });
 
-const productionRoutes: Route[] = [
+/** Exported so tests can assert the production route table (e.g. a single POST /contributions). */
+export const productionRoutes: Route[] = [
   ...profileRoutes(productionDeps),
   ...uploadRoutes(productionDeps),
   ...municipalityRoutes(productionDeps),
-  ...contributionRoutes({ ...productionDeps, inspector: evidenceInspector }),
-  ...publicReadRoutes(productionDeps),
-  ...mediaRoutes(productionDeps),
+  // A single contributionRoutes call: the router uses the first match, so a second call without
+  // validationPorts would silently disable the background validation of POST /contributions.
   ...contributionRoutes({
     ...productionDeps,
-    inspector: failClosedInspector,
+    inspector: evidenceInspector,
     validationPorts: productionValidationPorts,
   }),
+  ...publicReadRoutes(productionDeps),
+  ...mediaRoutes(productionDeps),
   ...communityRoutes(productionDeps),
 ];
 

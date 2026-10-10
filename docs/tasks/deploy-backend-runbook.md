@@ -133,19 +133,23 @@ Se configuran **solo** como secretos de Edge Functions (dashboard → Edge Funct
 | `ALLOWED_ORIGINS` | Origen exacto del front, sin barra final ni ruta: `https://<proyecto>.pages.dev`. Lista separada por comas. **Solo en staging** se añade `http://localhost:5173`; nunca en prod. | El navegador bloquea las peticiones por CORS (no se emite `Access-Control-Allow-Origin`). La API sigue respondiendo a clientes sin navegador. Smoke: FAIL "revisa ALLOWED_ORIGINS". |
 | `TURNSTILE_SECRET_KEY` | Secret key del widget Turnstile (Cloudflare dashboard → Turnstile). Para pruebas, las claves dummy oficiales: <https://developers.cloudflare.com/turnstile/troubleshooting/testing/>. | `POST /reports` responde `500 INTERNAL` (falla cerrado: nunca acepta denuncias sin verificar). Smoke: FAIL "faltan TURNSTILE_SECRET_KEY / REPORT_RATE_SALT". |
 | `REPORT_RATE_SALT` | Aleatorio, 32 bytes: `openssl rand -hex 32` (o `deno eval "console.log(Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join(''))"`). Distinto en cada proyecto. | `POST /reports` con un token Turnstile **válido** responde `500` (falla cerrado: no hay límite de tasa sin sal). |
+| `CLOUDFLARE_ACCOUNT_ID` | Account ID de Cloudflare (dashboard → Workers AI / barra lateral de la cuenta). Solo servidor; el validador de evidencias (T13.d) lo lee en cada validación. | Toda validación de una aportación termina en `TECHNICAL_ERROR` (falla cerrado: nunca `APPROVED`); la persona puede reintentar cuando se configure. No hay llamada al proveedor. |
+| `CLOUDFLARE_AUTH_TOKEN` | Token de API de Cloudflare **restringido al permiso Workers AI** (Free, sin facturación). Nunca el token global de la cuenta. | Igual que el anterior: toda validación acaba en `TECHNICAL_ERROR`. Un token inválido o revocado produce el mismo estado tras la respuesta 401/403 del proveedor. |
 
 ```bash
 supabase secrets set ALLOWED_ORIGINS=https://<proyecto>.pages.dev
 supabase secrets set TURNSTILE_SECRET_KEY=<valor>
 supabase secrets set REPORT_RATE_SALT=<valor>
+supabase secrets set CLOUDFLARE_ACCOUNT_ID=<valor>
+supabase secrets set CLOUDFLARE_AUTH_TOKEN=<valor>
 supabase secrets list
 ```
 
-Escribe los valores directamente en la terminal o usa `--env-file <fichero fuera del repo>` ([docs](https://supabase.com/docs/reference/cli/supabase-secrets-set)); `secrets list` sirve para comprobar que aparecen los tres nombres. Borra el historial de la shell si has pegado valores.
+Escribe los valores directamente en la terminal o usa `--env-file <fichero fuera del repo>` ([docs](https://supabase.com/docs/reference/cli/supabase-secrets-set)); `secrets list` sirve para comprobar que aparecen los cinco nombres. Borra el historial de la shell si has pegado valores.
 
 **No se configuran:** `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` los inyecta Supabase en la función; un secreto no puede empezar por `SUPABASE_` ([docs](https://supabase.com/docs/guides/functions/secrets)).
 
-**Límite del smoke:** con `turnstileToken: "invalid"` la función se detiene en Turnstile (`403`) antes de leer `REPORT_RATE_SALT`, así que el smoke **no** detecta que falte la sal. Compruébalo con `supabase secrets list` (deben aparecer los tres nombres) y con la prueba V12 del runbook operativo (denuncia real con Turnstile válido → `202`).
+**Límite del smoke:** con `turnstileToken: "invalid"` la función se detiene en Turnstile (`403`) antes de leer `REPORT_RATE_SALT`, así que el smoke **no** detecta que falte la sal. Compruébalo con `supabase secrets list` (deben aparecer los cinco nombres) y con la prueba V12 del runbook operativo (denuncia real con Turnstile válido → `202`).
 
 ## 5. Auth (dashboard de Supabase)
 
