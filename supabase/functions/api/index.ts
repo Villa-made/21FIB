@@ -2,6 +2,7 @@ import { ERROR_CODES } from './domain/contracts.ts';
 import { createSupabaseTokenVerifier } from './domain/auth.ts';
 import { createServiceClient } from './domain/db.ts';
 import { ApiError, corsHeaders, httpError, parseAllowedOrigins, withCors } from './domain/http.ts';
+import { municipalityRoutes } from './routes/municipalities.ts';
 import { profileRoutes } from './routes/profiles.ts';
 import { uploadRoutes } from './routes/uploads.ts';
 
@@ -22,6 +23,7 @@ const productionDeps = { verifier: createSupabaseTokenVerifier(), db: createServ
 const productionRoutes: Route[] = [
   ...profileRoutes(productionDeps),
   ...uploadRoutes(productionDeps),
+  ...municipalityRoutes(productionDeps),
 ];
 
 export function createHandler(routes: Route[]): (req: Request) => Promise<Response> {
