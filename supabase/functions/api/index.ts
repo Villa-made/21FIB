@@ -2,6 +2,8 @@ import { ERROR_CODES } from './domain/contracts.ts';
 import { createSupabaseTokenVerifier } from './domain/auth.ts';
 import { createServiceClient } from './domain/db.ts';
 import { ApiError, corsHeaders, httpError, parseAllowedOrigins, withCors } from './domain/http.ts';
+import type { EvidenceInspector } from './domain/ports.ts';
+import { contributionRoutes } from './routes/contributions.ts';
 import { municipalityRoutes } from './routes/municipalities.ts';
 import { profileRoutes } from './routes/profiles.ts';
 import { uploadRoutes } from './routes/uploads.ts';
@@ -20,10 +22,20 @@ export interface Route {
 
 // Dependencies remain lazy: createServiceClient() reads secrets only inside route handlers.
 const productionDeps = { verifier: createSupabaseTokenVerifier(), db: createServiceClient };
+
+// Temporal hasta T09 de C: media/evidence.ts aún no existe. Falla cerrado: sin inspector EXIF real no se
+// acepta ninguna foto (el router lo convierte en 500 sin detalles). Nunca sustituirlo por uno permisivo.
+const failClosedInspector: EvidenceInspector = {
+  inspect() {
+    throw new Error('EXIF inspector not available');
+  },
+};
+
 const productionRoutes: Route[] = [
   ...profileRoutes(productionDeps),
   ...uploadRoutes(productionDeps),
   ...municipalityRoutes(productionDeps),
+  ...contributionRoutes({ ...productionDeps, inspector: failClosedInspector }),
 ];
 
 export function createHandler(routes: Route[]): (req: Request) => Promise<Response> {
