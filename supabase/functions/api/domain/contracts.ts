@@ -50,6 +50,8 @@ export const ERROR_CODES = {
   PHOTO_TOO_OLD: 'PHOTO_TOO_OLD',
   INVALID_MUNICIPALITY: 'INVALID_MUNICIPALITY',
   UNSUPPORTED_MEDIA: 'UNSUPPORTED_MEDIA',
+  PHOTO_NOT_FOUND: 'PHOTO_NOT_FOUND',
+  PHOTO_ALREADY_USED: 'PHOTO_ALREADY_USED',
   AI_UNAVAILABLE: 'AI_UNAVAILABLE',
 } as const;
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
@@ -121,6 +123,19 @@ export interface ContributionDto {
 export interface ProvideEvidenceRequest {
   photoPath: string;
   captureOrigin: CaptureOrigin;
+}
+
+// ---- Municipalities (§4) ---------------------------------------------------------
+
+export interface MunicipalityDto {
+  code: string;
+  name: string;
+  provinceName: string;
+}
+
+export interface MunicipalitiesResponse {
+  items: MunicipalityDto[];
+  nextCursor: null;
 }
 
 // ---- Feed and leaderboard (§4) ---------------------------------------------
