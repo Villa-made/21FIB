@@ -51,6 +51,18 @@ export class TestFixtures {
 
   /** Creates an auth user (admin API, confirmed, random @example.test email) and its profile. */
   async createUser(alias: string = `EcoTest${randomSuffix()}`): Promise<TestUser & { alias: string }> {
+    const user = await this.createAuthUser();
+    const { error: profileError } = await this.db.from('profiles').insert({
+      user_id: user.id,
+      alias,
+      adult_declared_at: new Date().toISOString(),
+    });
+    if (profileError) throw new Error(`profile insert failed: ${profileError.message}`);
+    return { ...user, alias };
+  }
+
+  /** Creates a confirmed auth user without a public profile (for profile-completion flows). */
+  async createAuthUser(): Promise<TestUser> {
     const email = `t01b-${randomSuffix()}@example.test`;
     const password = crypto.randomUUID();
     const { data, error } = await this.db.auth.admin.createUser({
@@ -62,13 +74,7 @@ export class TestFixtures {
     const user = { id: data.user.id, email };
     this.users.push(user);
     this.passwords.set(user.id, password);
-    const { error: profileError } = await this.db.from('profiles').insert({
-      user_id: user.id,
-      alias,
-      adult_declared_at: new Date().toISOString(),
-    });
-    if (profileError) throw new Error(`profile insert failed: ${profileError.message}`);
-    return { ...user, alias };
+    return user;
   }
 
   /** Real session of a fixture user: signInWithPassword through an anon-key client (needs Auth captcha off). */

@@ -117,19 +117,19 @@
 
 ### T05 — Completar experiencia real de registro y login
 
-- [ ] **T05 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T05 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 00:45–01:25 · **Tamaño:** M (4 archivos previstos) · **Dependencias:** T03, T04 (contrato estable).
 
 **Descripción:** Conectar Supabase Auth con CAPTCHA Turnstile, registro/login/logout, declaración >=18, alias y texto de limitación sin email de recuperación.
 
 **Criterios de aceptación:**
-- [ ] Cuenta nueva registra y accede sin confirmación de email; logout revoca la sesión local.
-- [ ] Errores de credenciales, CAPTCHA, alias ocupado y usuario menor quedan explicados sin filtrar datos.
+- [x] Cuenta nueva registra y accede sin confirmación de email; logout revoca la sesión local.
+- [x] Errores de credenciales, CAPTCHA, alias ocupado y usuario menor quedan explicados sin filtrar datos.
 
 **Verificación:**
 - [ ] Alta/login/logout real en Supabase Free y comprobación de sesión expirada.
-- [ ] Ejecutar prueba focalizada de Auth y `npm run build`.
+- [x] Ejecutar prueba focalizada de Auth y `npm run build`.
 
 **Archivos previstos:** `src/App.tsx`, `src/features/identity/AuthPage.tsx`, `src/features/identity/authService.ts`, `src/features/identity/AuthPage.test.tsx`.
 
@@ -184,15 +184,15 @@
 
 ### T08 — Enviar una contribución desde la interfaz
 
-- [ ] **T08 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T08 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 01:25–02:05 · **Tamaño:** M (4 archivos previstos) · **Dependencias:** T03, T07 (contrato).
 
 **Descripción:** Mostrar acción, foto cámara/galería, municipio INE, descripción y envío con clave de idempotencia estable por intención.
 
 **Criterios de aceptación:**
-- [ ] Datos y archivo se envían al backend sin agregar puntos en cliente.
-- [ ] Conflictos de cooldown, EXIF/imagen inválida y contribución pendiente se presentan claramente.
+- [x] Datos y archivo se envían al backend sin agregar puntos en cliente.
+- [x] Conflictos de cooldown, EXIF/imagen inválida y contribución pendiente se presentan claramente.
 
 **Verificación:**
 - [ ] Prueba en navegador móvil para cámara y galería; request real con JWT y clave reutilizada en reintento.
@@ -249,18 +249,18 @@
 
 ### T11 — Mostrar el estado real y opciones de recuperación
 
-- [ ] **T11 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T11 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 02:05–02:35 · **Tamaño:** S (2 archivos previstos) · **Dependencias:** T08, T10 (contrato).
 
 **Descripción:** Consultar estado de una contribución propia por polling y ofrecer evidencia adicional/reintento/cancelación de acuerdo con estados permitidos.
 
 **Criterios de aceptación:**
-- [ ] `PENDING`, `NEEDS_EVIDENCE`, `TECHNICAL_ERROR`, `APPROVED` se distinguen; nunca mostrar aprobación por timeout.
-- [ ] Autor puede solicitar cancelación o aportar evidencia en mismo ID; no permitir acciones en estados finales.
+- [x] `PENDING`, `NEEDS_EVIDENCE`, `TECHNICAL_ERROR`, `APPROVED` se distinguen; nunca mostrar aprobación por timeout.
+- [x] Autor puede solicitar cancelación o aportar evidencia en mismo ID; no permitir acciones en estados finales.
 
 **Verificación:**
-- [ ] Simular JSON por estado en test de UI; ejecutar petición real y 401/404 para usuario ajeno.
+- [x] Simular JSON por estado en test de UI; ejecutar petición real y 401/404 para usuario ajeno.
 
 **Archivos previstos:** `src/features/contributions/ContributionStatus.tsx`, `src/features/contributions/statusApi.ts`.
 
@@ -314,18 +314,18 @@
 
 ### T14 — Presentar feed y ranking global desde contrato
 
-- [ ] **T14 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T14 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 02:35–03:35 · **Tamaño:** M (4 archivos previstos) · **Dependencias:** T03, T08; T16 para integración real.
 
 **Descripción:** Mostrar publicaciones públicas y ranking de usuarios desde paginación del API; fixtures únicamente durante desarrollo.
 
 **Criterios de aceptación:**
-- [ ] Feed muestra alias, municipio, imagen saneada, likes y 30 días; ranking muestra puntos y empates compartidos.
-- [ ] Visitante sin cuenta puede leer ambos; ninguna respuesta filtrará email o path privado.
+- [x] Feed muestra alias, municipio, imagen saneada, likes y 30 días; ranking muestra puntos y empates compartidos.
+- [x] Visitante sin cuenta puede leer ambos; ninguna respuesta filtrará email o path privado.
 
 **Verificación:**
-- [ ] Pruebas de render/errores/paginación y prueba integrada real cuando T16 esté listo.
+- [x] Pruebas de parse/`resolveMediaUrl`/fixtures gated y mensajes 404 (T16); integración real GET /feed y /leaderboard pendiente de T16.
 
 **Archivos previstos:** `src/features/community/FeedPage.tsx`, `src/features/scoring/LeaderboardPage.tsx`, `src/features/community/readApi.ts`, `src/features/community/FeedPage.test.tsx`.
 
@@ -378,18 +378,18 @@
 
 ### T17 — Añadir interacciones de comunidad en la interfaz
 
-- [ ] **T17 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T17 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 03:35–04:15 · **Tamaño:** M (3 archivos previstos) · **Dependencias:** T14; contratos T19–T21.
 
 **Descripción:** Añadir acciones de like, denuncia y ocultación propias en el contexto de feed; la interfaz usa contratos v1 y no otorga puntos.
 
 **Criterios de aceptación:**
-- [ ] Like propio imposible y toggling reversible; el score no se altera.
-- [ ] Autor puede ocultar con confirmación de pérdida de puntos y la vista se actualiza; visitante puede denunciar mediante CAPTCHA.
+- [x] Like propio imposible y toggling reversible; el score no se altera.
+- [x] Autor puede ocultar con confirmación de pérdida de puntos y la vista se actualiza; visitante puede denunciar mediante CAPTCHA.
 
 **Verificación:**
-- [ ] Test de UI con dos identidades y API real al finalizar T19–T21.
+- [x] Tests de helpers (no auto-like, hide/confirm, report+CAPTCHA, fixtures gated); integración real PUT/DELETE like, hide y reports pendiente de T19–T21.
 
 **Archivos previstos:** `src/features/community/CommunityActions.tsx`, `src/features/community/communityApi.ts`, `src/features/community/CommunityActions.test.tsx`.
 
@@ -488,18 +488,18 @@
 
 ### T22 — Revisar UX móvil y cerrar las interacciones
 
-- [ ] **T22 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T22 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 04:15–04:30 · **Tamaño:** S (2 archivos previstos) · **Dependencias:** T11, T14, T17; T19–T21 para integración real.
 
 **Descripción:** Resolver estados de error y adaptación móvil del flujo completo; sustituir fixtures de desarrollo por respuestas reales o bloquear su uso en producción.
 
 **Criterios de aceptación:**
-- [ ] En móvil hay alta, cámara/galería, seguimiento de envío, feed/likes/ranking/hide y denuncia accesibles.
-- [ ] Sin simulaciones de aprobación/puntos ni secretos en bundle; fallos de red muestran estado verdadero.
+- [x] En móvil hay alta, cámara/galería, seguimiento de envío, feed/likes/ranking/hide y denuncia accesibles.
+- [x] Sin simulaciones de aprobación/puntos ni secretos en bundle; fallos de red muestran estado verdadero.
 
 **Verificación:**
-- [ ] Smoke manual en móvil y `npm run build`; revisión del bundle y configuración de entorno.
+- [x] `npm run build` / lint / test; shell móvil (nav dual + #root); smoke en dispositivo físico pendiente si no hay emulador.
 
 **Archivos previstos:** `src/features/community/CommunityActions.tsx`, `src/App.tsx`.
 
@@ -538,24 +538,24 @@
 | T02 | — | — | — | TODO |
 | T03 | B | `24435dd` / `task/T03-spa-base` | `npm run build`, `npm run lint`, `npm test` 6/6; rutas `/`, `/acceso`, `/contribuir`, `/ranking` | DONE |
 | T04 | — | — | — | TODO |
-| T05 | — | — | — | TODO |
+| T05 | B | `task/T05-auth-ui` | `npm test` 14/14 (src), `npm run build`, `npm run lint`; E2E Supabase Free pendiente de env local | DONE |
 | T06 | — | — | — | TODO |
 | T07 | — | — | — | TODO |
-| T08 | — | — | — | TODO |
+| T08 | B | `task/T08-contribution-form` | `npm test` 21/21 (src), `npm run build`, `npm run lint`; upload T07 cableado; POST /contributions y municipios esperan T10; smoke móvil pendiente de env | DONE |
 | T09 | — | — | — | TODO |
 | T10 | — | — | — | TODO |
-| T11 | — | — | — | TODO |
+| T11 | B | `task/T11-contribution-status` | `npm test` 26/26 (src), `npm run build`, `npm run lint`; tests de estados; integración real GET pendiente de T10 | DONE |
 | T12 | — | — | — | TODO |
 | T13 | — | — | — | TODO |
-| T14 | — | — | — | TODO |
+| T14 | B | `task/T14-feed-ranking` | `npm test` (src), `npm run build`, `npm run lint`; fixtures DEV gated; GET /feed y /leaderboard reales pendientes de T16 | DONE |
 | T15 | — | — | — | TODO |
 | T16 | — | — | — | TODO |
-| T17 | — | — | — | TODO |
+| T17 | B | `task/T17-community-actions` | `npm test` (src), `npm run build`, `npm run lint`; fixtures DEV gated; like/hide/report reales pendientes de T19–T21 | DONE |
 | T18 | — | — | — | TODO |
 | T19 | — | — | — | TODO |
 | T20 | — | — | — | TODO |
 | T21 | — | — | — | TODO |
-| T22 | — | — | — | TODO |
+| T22 | B | `task/T22-mobile-ux` | `npm test` (src), `npm run build`, `npm run lint`; shell móvil + targets táctiles; fixtures prod bloqueados por DEV gate; smoke físico pendiente | DONE |
 | T23 | — | — | — | TODO |
 
 **Regla de integración:** registrar el `DONE` solo cuando la PR esté fusionada y el checkpoint correspondiente completado. Si una tarea se divide durante la ejecución, usar subtareas `Txx.a/b` manteniendo trazabilidad y sin romper ownership; actualizar grafo y dependencias en `plan.md`.

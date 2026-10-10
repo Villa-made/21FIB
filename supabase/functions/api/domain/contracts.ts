@@ -43,11 +43,18 @@ export const ERROR_CODES = {
   COOLDOWN_ACTIVE: 'COOLDOWN_ACTIVE',
   INVALID_STATE: 'INVALID_STATE',
   IDEMPOTENCY_CONFLICT: 'IDEMPOTENCY_CONFLICT',
+  IMAGE_TOO_LARGE: 'IMAGE_TOO_LARGE',
   EXIF_REQUIRED: 'EXIF_REQUIRED',
   INVALID_ALIAS: 'INVALID_ALIAS',
   ADULT_DECLARATION_REQUIRED: 'ADULT_DECLARATION_REQUIRED',
   PHOTO_TOO_OLD: 'PHOTO_TOO_OLD',
   INVALID_MUNICIPALITY: 'INVALID_MUNICIPALITY',
+  UNSUPPORTED_MEDIA: 'UNSUPPORTED_MEDIA',
+  PHOTO_NOT_FOUND: 'PHOTO_NOT_FOUND',
+  PHOTO_ALREADY_USED: 'PHOTO_ALREADY_USED',
+  CANNOT_LIKE_OWN: 'CANNOT_LIKE_OWN',
+  CAPTCHA_FAILED: 'CAPTCHA_FAILED',
+  RATE_LIMITED: 'RATE_LIMITED',
   AI_UNAVAILABLE: 'AI_UNAVAILABLE',
 } as const;
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
@@ -119,6 +126,36 @@ export interface ContributionDto {
 export interface ProvideEvidenceRequest {
   photoPath: string;
   captureOrigin: CaptureOrigin;
+}
+
+// PUT/DELETE /contributions/{id}/like (§4)
+export interface LikeResponse {
+  liked: boolean;
+  likeCount: number;
+}
+
+// POST /reports (§4)
+export interface ReportRequest {
+  contributionId: string;
+  reason: string;
+  turnstileToken: string;
+}
+
+export interface ReportResponse {
+  accepted: true;
+}
+
+// ---- Municipalities (§4) ---------------------------------------------------------
+
+export interface MunicipalityDto {
+  code: string;
+  name: string;
+  provinceName: string;
+}
+
+export interface MunicipalitiesResponse {
+  items: MunicipalityDto[];
+  nextCursor: null;
 }
 
 // ---- Feed and leaderboard (§4) ---------------------------------------------
