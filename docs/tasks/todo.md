@@ -534,21 +534,21 @@
 | T00 | — | — | — | TODO |
 | T01 | — | — | — | TODO |
 | T02 | — | — | — | TODO |
-| T03 | B (Claude) | rama task/T03-spa-base | build+lint OK; 4 rutas comprobadas en móvil (fixtures) | REVIEW |
+| T03 | B (Claude) | rama task/B-frontend | build+lint OK; 4 rutas comprobadas en móvil (fixtures) | REVIEW |
 | T04 | — | — | — | TODO |
-| T05 | B (Claude) | rama task/T03-spa-base | UI registro/login/alias/≥18/Turnstile probada con fixtures (alias duplicado → completar perfil). Pendiente: Supabase real + ruta de perfil de A | REVIEW |
+| T05 | B (Claude) | rama task/B-frontend | UI registro/login/alias/≥18/Turnstile probada con fixtures (alias duplicado → completar perfil). Pendiente: Supabase real + ruta de perfil de A | REVIEW |
 | T06 | — | — | — | TODO |
 | T07 | — | — | — | TODO |
-| T08 | B (Claude) | rama task/T03-spa-base | Form cámara/galería/INE/descripción, Idempotency-Key por intención; EXIF cliente 59/60/61 testeado. Pendiente: API real T07/T10 | REVIEW |
+| T08 | B (Claude) | rama task/B-frontend | Form cámara/galería/INE/descripción, Idempotency-Key por intención; EXIF cliente 59/60/61 testeado. Pendiente: API real T07/T10 | REVIEW |
 | T09 | — | — | — | TODO |
 | T10 | — | — | — | TODO |
-| T11 | B (Claude) | rama task/T03-spa-base | Polling de estado + evidence/retry/cancel probados con fixtures. Pendiente: API real T13 | REVIEW |
+| T11 | B (Claude) | rama task/B-frontend | Polling de estado + evidence/retry/cancel probados con fixtures. Pendiente: API real T13 | REVIEW |
 | T12 | — | — | — | TODO |
 | T13 | — | — | — | TODO |
-| T14 | B (Claude) | rama task/T03-spa-base | Feed/ranking paginados, empates compartidos, probados con fixtures. Pendiente: API real T16 | REVIEW |
+| T14 | B (Claude) | rama task/B-frontend | Feed/ranking paginados, empates compartidos, probados con fixtures. Pendiente: API real T16 | REVIEW |
 | T15 | — | — | — | TODO |
 | T16 | — | — | — | TODO |
-| T17 | B (Claude) | rama task/T03-spa-base | Like (sin auto-like), denuncia con Turnstile, ocultar con aviso de pérdida de puntos, probados con fixtures. Pendiente: T19–T21 | REVIEW |
+| T17 | B (Claude) | rama task/B-frontend | Like (sin auto-like), denuncia con Turnstile, ocultar con aviso de pérdida de puntos, probados con fixtures. Pendiente: T19–T21 | REVIEW |
 | T18 | — | — | — | TODO |
 | T19 | — | — | — | TODO |
 | T20 | — | — | — | TODO |

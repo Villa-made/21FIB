@@ -1,6 +1,6 @@
 # Traspaso — Rol B (frontend)
 
-**Fecha:** 2026-10-10 · **Rama:** `task/T03-spa-base` · **PR:** https://github.com/Villa-made/21FIB/pull/1 (borrador)
+**Fecha:** 2026-10-10 · **Rama:** `task/B-frontend` · **PR:** https://github.com/Villa-made/21FIB/pull/1 (borrador)
 **Estado:** T03, T05, T08, T11, T14, T17 implementadas y probadas **solo con fixtures**. Marcadas `REVIEW` en [`todo.md`](todo.md). Pendiente: T22 e integración con backend real.
 
 ## Cómo arrancar
