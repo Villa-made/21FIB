@@ -5,6 +5,17 @@ export interface ValidationMessages {
   user: string;
 }
 
+export type ProviderFailureKind = 'UNAUTHORIZED' | 'RATE_LIMITED' | 'TIMEOUT' | 'UNAVAILABLE';
+
+/** An internal failure only; callers must not convert it into a validation decision. */
+export class ProviderTechnicalError extends Error {
+  override readonly name = 'ProviderTechnicalError';
+
+  constructor(readonly kind: ProviderFailureKind) {
+    super('La validación de IA no está disponible temporalmente.');
+  }
+}
+
 const ACTION_EVIDENCE_POLICY: Record<ActionType, string> = {
   RECYCLING:
     'Busca evidencia de separación o depósito de residuos en un contenedor o flujo de reciclaje adecuado.',
@@ -38,4 +49,24 @@ export function buildValidationMessages(
       JSON.stringify({ description: input.description }),
     ].join('\n\n'),
   };
+}
+
+/** Never preserve an upstream HTTP body or status text in a user-facing error. */
+export function classifyProviderStatus(status: number): ProviderTechnicalError {
+  if (status === 401 || status === 403) return new ProviderTechnicalError('UNAUTHORIZED');
+  if (status === 429) return new ProviderTechnicalError('RATE_LIMITED');
+  if (status === 408 || status === 504) return new ProviderTechnicalError('TIMEOUT');
+  return new ProviderTechnicalError('UNAVAILABLE');
+}
+
+/** Network and abort errors are technical failures and can never approve evidence. */
+export function classifyProviderException(error: unknown): ProviderTechnicalError {
+  if (
+    error instanceof DOMException && error.name === 'AbortError' ||
+    error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')
+  ) {
+    return new ProviderTechnicalError('TIMEOUT');
+  }
+
+  return new ProviderTechnicalError('UNAVAILABLE');
 }

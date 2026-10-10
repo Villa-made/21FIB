@@ -1,6 +1,10 @@
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import { parseValidationResult } from '../../supabase/functions/api/ai/schema.ts';
-import { buildValidationMessages } from '../../supabase/functions/api/ai/validator.ts';
+import {
+  buildValidationMessages,
+  classifyProviderException,
+  classifyProviderStatus,
+} from '../../supabase/functions/api/ai/validator.ts';
 
 Deno.test('parseValidationResult accepts an exact approved result and normalizes its reason', () => {
   const result = parseValidationResult(
@@ -81,4 +85,19 @@ Deno.test('buildValidationMessages treats an injected description as data, not p
   assertEquals(messages.system.includes(injectedDescription), false);
   assertStringIncludes(messages.user, 'DATOS DE USUARIO NO CONFIABLES');
   assertStringIncludes(messages.user, JSON.stringify(injectedDescription));
+});
+
+Deno.test('classifyProviderStatus makes 403 and 429 technical non-approvals', () => {
+  assertEquals(classifyProviderStatus(403).kind, 'UNAUTHORIZED');
+  assertEquals(classifyProviderStatus(429).kind, 'RATE_LIMITED');
+});
+
+Deno.test('classifyProviderException turns timeout and arbitrary upstream errors into safe technical failures', () => {
+  const timeout = classifyProviderException(new DOMException('request timed out', 'AbortError'));
+  assertEquals(timeout.kind, 'TIMEOUT');
+
+  const secret = 'Bearer secret-token-must-not-leak';
+  const unavailable = classifyProviderException(new Error(secret));
+  assertEquals(unavailable.kind, 'UNAVAILABLE');
+  assertEquals(unavailable.message.includes(secret), false);
 });
