@@ -1,8 +1,10 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties } from 'react'
 import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import FeedPage from './features/community/FeedPage'
 import ContributionForm from './features/contributions/ContributionForm'
 import ContributionStatus from './features/contributions/ContributionStatus'
 import AuthPage, { AuthProvider, useAuth } from './features/identity/AuthPage'
+import LeaderboardPage from './features/scoring/LeaderboardPage'
 
 const shell: CSSProperties = {
   minHeight: '100svh',
@@ -45,23 +47,6 @@ const main: CSSProperties = {
   margin: '0 auto',
   flex: 1,
   padding: '1.25rem 1rem 5.5rem',
-}
-
-const banner: CSSProperties = {
-  marginBottom: '1rem',
-  padding: '0.75rem 1rem',
-  borderRadius: '0.5rem',
-  background: '#fef3c7',
-  color: '#78350f',
-  fontSize: '0.875rem',
-  fontWeight: 600,
-}
-
-const card: CSSProperties = {
-  padding: '1.25rem',
-  borderRadius: '0.75rem',
-  background: '#fff',
-  border: '1px solid #e7e5e4',
 }
 
 const mobileNav: CSSProperties = {
@@ -128,36 +113,6 @@ function mobileNavStyle(isActive: boolean): CSSProperties {
   }
 }
 
-function Provisional({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section style={card}>
-      <div style={banner} role="status">
-        Contenido provisional · sin puntos ni aprobaciones en cliente
-      </div>
-      <h1 style={{ margin: '0 0 0.75rem', fontSize: '1.5rem' }}>{title}</h1>
-      <div style={{ color: '#57534e', lineHeight: 1.5 }}>{children}</div>
-    </section>
-  )
-}
-
-function FeedPlaceholder() {
-  return (
-    <Provisional title="Feed">
-      Aquí aparecerán publicaciones aprobadas (últimos 30 días). Visitantes
-      anónimos podrán leer el feed cuando el backend (T16) esté disponible.
-    </Provisional>
-  )
-}
-
-function RankingPlaceholder() {
-  return (
-    <Provisional title="Ranking">
-      Clasificación global por puntos derivados. Empates compartidos según
-      contrato v1. Sin puntuación calculada en el navegador.
-    </Provisional>
-  )
-}
-
 function HeaderAuth() {
   const { status, profile, signOut } = useAuth()
   if (status === 'ready' && profile) {
@@ -213,8 +168,8 @@ function ShellLayout() {
 
       <main style={main}>
         <Routes>
-          <Route index element={<FeedPlaceholder />} />
-          <Route path="ranking" element={<RankingPlaceholder />} />
+          <Route index element={<FeedPage />} />
+          <Route path="ranking" element={<LeaderboardPage />} />
           <Route path="contribuir" element={<ContributionForm />} />
           <Route path="contribuciones/:id" element={<ContributionStatus />} />
           <Route path="acceso" element={<AuthPage />} />

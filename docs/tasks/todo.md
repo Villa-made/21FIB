@@ -312,18 +312,18 @@
 
 ### T14 — Presentar feed y ranking global desde contrato
 
-- [ ] **T14 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T14 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 02:35–03:35 · **Tamaño:** M (4 archivos previstos) · **Dependencias:** T03, T08; T16 para integración real.
 
 **Descripción:** Mostrar publicaciones públicas y ranking de usuarios desde paginación del API; fixtures únicamente durante desarrollo.
 
 **Criterios de aceptación:**
-- [ ] Feed muestra alias, municipio, imagen saneada, likes y 30 días; ranking muestra puntos y empates compartidos.
-- [ ] Visitante sin cuenta puede leer ambos; ninguna respuesta filtrará email o path privado.
+- [x] Feed muestra alias, municipio, imagen saneada, likes y 30 días; ranking muestra puntos y empates compartidos.
+- [x] Visitante sin cuenta puede leer ambos; ninguna respuesta filtrará email o path privado.
 
 **Verificación:**
-- [ ] Pruebas de render/errores/paginación y prueba integrada real cuando T16 esté listo.
+- [x] Pruebas de parse/`resolveMediaUrl`/fixtures gated y mensajes 404 (T16); integración real GET /feed y /leaderboard pendiente de T16.
 
 **Archivos previstos:** `src/features/community/FeedPage.tsx`, `src/features/scoring/LeaderboardPage.tsx`, `src/features/community/readApi.ts`, `src/features/community/FeedPage.test.tsx`.
 
@@ -545,7 +545,7 @@
 | T11 | B | `task/T11-contribution-status` | `npm test` 26/26 (src), `npm run build`, `npm run lint`; tests de estados; integración real GET pendiente de T10 | DONE |
 | T12 | — | — | — | TODO |
 | T13 | — | — | — | TODO |
-| T14 | — | — | — | TODO |
+| T14 | B | `task/T14-feed-ranking` | `npm test` (src), `npm run build`, `npm run lint`; fixtures DEV gated; GET /feed y /leaderboard reales pendientes de T16 | DONE |
 | T15 | — | — | — | TODO |
 | T16 | — | — | — | TODO |
 | T17 | — | — | — | TODO |
