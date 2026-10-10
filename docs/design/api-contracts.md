@@ -6,7 +6,7 @@
 
 - DTO `camelCase`, enums `UPPER_SNAKE`, IDs UUID, fechas ISO-8601 UTC. No exponer referencias privadas de Storage en DTO públicos.
 - Autenticado: `Authorization: Bearer <supabase_access_token>`. La función valida el JWT antes de ejecutar cambios y **deriva** `userId` desde el servidor. Lecturas públicas aceptan ausencia de JWT.
-- Comandos de crear/reintentar requieren `Idempotency-Key: <uuid>` reutilizada en reintentos de **la misma intención**; jamás recalcular una nueva clave para una respuesta perdida.
+- Comandos de crear/reintentar requieren `Idempotency-Key: <uuid>` reutilizada en reintentos de **la misma intención**; jamás recalcular una nueva clave para una respuesta perdida. Una clave ausente o que no sea UUID devuelve `400 INVALID_REQUEST` con `details.field = "Idempotency-Key"`.
 - Paginación: `limit` por defecto 20, máximo 50; `cursor` opaco; `nextCursor` nulo al terminar. Búsqueda de municipios por `q` (mínimo 2 caracteres), sin posición GPS obligatoria.
 - Todas las respuestas de error: `{ "error": { "code": "MACHINE_CODE", "message": "Texto seguro", "details": {} } }`; no revelar prompts, tokens ni información sensible.
 - Fallos: `400` cuerpo malformado, `401` no autenticado, `403` prohibido, `404` inexistente/no autorizado, `409` conflictos temporales/duplicados, `413` imagen demasiado grande, `422` validación de campos/EXIF, `429` límite, `502/503` IA externa, `500` interno.
@@ -172,11 +172,13 @@ interface ValidationResult { decision: Decision; reason: string; }
 | `409` | `COOLDOWN_ACTIVE` | Último aprobado enviado hace < 60 min; `details.retryAt` |
 | `409` | `INVALID_STATE` | Reintento/ocultación/cancelación fuera de estado permitido |
 | `409` | `IDEMPOTENCY_CONFLICT` | Misma clave, payload diferente |
+| `409` | `PHOTO_ALREADY_USED` | La foto ya está asociada a otra contribución |
 | `413` | `IMAGE_TOO_LARGE` | `sizeBytes` supera 5 MB |
 | `422` | `EXIF_REQUIRED` | Galería sin EXIF válido; pedir cámara |
 | `422` | `INVALID_ALIAS` | Alias inválido después de aplicar `trim` |
 | `422` | `ADULT_DECLARATION_REQUIRED` | `adultDeclared` ausente o distinto de `true` |
 | `422` | `PHOTO_TOO_OLD` | EXIF anterior a 60 min o futuro |
+| `422` | `PHOTO_NOT_FOUND` | `photoPath` no existe en el almacenamiento privado |
 | `422` | `INVALID_MUNICIPALITY` | Código no existe en catálogo cargado |
 | `422` | `UNSUPPORTED_MEDIA` | `contentType` no es JPEG, PNG ni WebP |
 | `503` | `AI_UNAVAILABLE` | Proveedor no disponible (en reintento se refleja también en estado) |
