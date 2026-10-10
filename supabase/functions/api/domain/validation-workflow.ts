@@ -114,13 +114,9 @@ async function execute(
     return await technicalError(id, version, ports);
   }
 
-  let applied: boolean;
-  try {
-    applied = await ports.repository.complete(id, version, 'APPROVED', reason, publicPath);
-  } catch (err) {
-    await removeQuietly(ports, publicPath);
-    throw err;
-  }
+  // If complete() throws, the database may have stored the approval before the failure: keep the
+  // copy (harmless in a private bucket). It is removed only when complete() answers false.
+  const applied = await ports.repository.complete(id, version, 'APPROVED', reason, publicPath);
   if (!applied) {
     await removeQuietly(ports, publicPath);
     return 'SKIPPED';

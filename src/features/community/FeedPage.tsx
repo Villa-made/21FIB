@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
+import CommunityActions from './CommunityActions'
 import {
   fetchFeed,
   mediaSrc,
@@ -120,6 +121,24 @@ export default function FeedPage() {
             {item.likeCount} me gusta
             {item.likedByMe ? ' · te gusta' : ''}
           </p>
+          <CommunityActions
+            contributionId={item.id}
+            authorAlias={item.authorAlias}
+            likedByMe={item.likedByMe}
+            likeCount={item.likeCount}
+            onLikedChange={(next) => {
+              setItems((prev) =>
+                prev.map((row) =>
+                  row.id === item.id
+                    ? { ...row, likedByMe: next.likedByMe, likeCount: next.likeCount }
+                    : row,
+                ),
+              )
+            }}
+            onHidden={() => {
+              setItems((prev) => prev.filter((row) => row.id !== item.id))
+            }}
+          />
         </article>
       ))}
 

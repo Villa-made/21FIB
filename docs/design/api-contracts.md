@@ -130,6 +130,12 @@ El campo `imageUrl` es una ruta **relativa a la base de la API**, no al origen d
 }
 ```
 
+**Me gusta:** `PUT /contributions/{id}/like` y `DELETE /contributions/{id}/like` (cuerpo vacío). Ambos son idempotentes y responden `200` con el estado final; los likes no dan puntos. La publicación debe estar visible (`APPROVED` y no oculta, sin ventana de 30 días); si no existe o no es visible → `404 NOT_FOUND`; si es propia → `403 CANNOT_LIKE_OWN`.
+
+```json
+{ "liked": true, "likeCount": 4 }
+```
+
 **Ranking:** `GET /leaderboard?limit=20&cursor=...`
 
 ```json
@@ -150,7 +156,7 @@ El campo `imageUrl` es una ruta **relativa a la base de la API**, no al origen d
 { "contributionId": "<uuid>", "reason": "Contiene un rostro identificable", "turnstileToken": "<token>" }
 ```
 
-Respuesta `{ "accepted": true }`, sin revelar la resolución ni detalles del equipo.
+Respuesta `202 { "accepted": true }`, sin revelar la resolución ni detalles del equipo. Es público (sin sesión). Orden: 1) cuerpo, `contributionId` UUID y `reason` de 1 a 500 caracteres tras `trim` → `400 INVALID_REQUEST` con `details.field`; 2) token Turnstile vacío o inválido → `403 CAPTCHA_FAILED`, sin tocar la base de datos; 3) límite de 5 denuncias/hora por clave y 3/hora por (clave, contribución) → `429 RATE_LIMITED`. Una contribución inexistente o no visible responde `202` igualmente, sin crear denuncia (el intento consume límite).
 
 ## 5. Contrato de validación de IA (interno, no endpoint público)
 
@@ -173,6 +179,9 @@ interface ValidationResult { decision: Decision; reason: string; }
 | `401` | `AUTH_REQUIRED` | Publicación/like sin sesión |
 | `403` | `NOT_OWNER` | Intento de modificar aportación ajena |
 | `403` | `PROFILE_REQUIRED` | Escritura sin perfil |
+| `403` | `CANNOT_LIKE_OWN` | Me gusta (PUT/DELETE) sobre una publicación propia |
+| `403` | `CAPTCHA_FAILED` | `POST /reports` con token Turnstile vacío o inválido |
+| `429` | `RATE_LIMITED` | `POST /reports` supera el límite por hora |
 | `404` | `PROFILE_REQUIRED` | `GET /profiles/me` sin perfil |
 | `409` | `ALIAS_TAKEN` | El alias ya pertenece a otro perfil, sin distinguir mayúsculas |
 | `409` | `PROFILE_EXISTS` | Segundo `POST /profiles` del mismo usuario |

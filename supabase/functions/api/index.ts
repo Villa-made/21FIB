@@ -3,8 +3,21 @@ import { createSupabaseTokenVerifier } from './domain/auth.ts';
 import { createServiceClient } from './domain/db.ts';
 import { ApiError, corsHeaders, httpError, parseAllowedOrigins, withCors } from './domain/http.ts';
 import { evidenceInspector } from './media/evidence.ts';
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.117.3';
+import {
+  type EvidenceInspector,
+  type EvidenceSanitizer,
+  type EvidenceValidator,
+  supabaseEvidenceStorage,
+  supabasePublishedStorage,
+  supabaseValidationRepository,
+} from './domain/ports.ts';
+import type { ValidationPorts } from './domain/validation-workflow.ts';
+import { communityRoutes } from './routes/community.ts';
 import { contributionRoutes } from './routes/contributions.ts';
+import { mediaRoutes } from './routes/media.ts';
 import { municipalityRoutes } from './routes/municipalities.ts';
+import { publicReadRoutes } from './routes/public-reads.ts';
 import { profileRoutes } from './routes/profiles.ts';
 import { uploadRoutes } from './routes/uploads.ts';
 
@@ -23,11 +36,48 @@ export interface Route {
 // Dependencies remain lazy: createServiceClient() reads secrets only inside route handlers.
 const productionDeps = { verifier: createSupabaseTokenVerifier(), db: createServiceClient };
 
+// Temporal hasta T09 de C: media/evidence.ts aún no existe. Falla cerrado: sin inspector EXIF real no se
+// acepta ninguna foto (el router lo convierte en 500 sin detalles). Nunca sustituirlo por uno permisivo.
+const failClosedInspector: EvidenceInspector = {
+  inspect() {
+    throw new Error('EXIF inspector not available');
+  },
+};
+
+// Temporal hasta T06/T09 de C (ai/validator.ts, media/): fallan cerrado. Cada validación acaba en
+// TECHNICAL_ERROR, nunca en APPROVED. Se sustituyen en T13.d; jamás por un validador que apruebe.
+const failClosedValidator: EvidenceValidator = {
+  validate() {
+    return Promise.reject(new Error('AI validator not available'));
+  },
+};
+const failClosedSanitizer: EvidenceSanitizer = {
+  sanitize() {
+    return Promise.reject(new Error('Image sanitizer not available'));
+  },
+};
+
+const productionValidationPorts = (db: SupabaseClient): ValidationPorts => ({
+  repository: supabaseValidationRepository(db),
+  evidenceStorage: supabaseEvidenceStorage(db),
+  publishedStorage: supabasePublishedStorage(db),
+  validator: failClosedValidator,
+  sanitizer: failClosedSanitizer,
+});
+
 const productionRoutes: Route[] = [
   ...profileRoutes(productionDeps),
   ...uploadRoutes(productionDeps),
   ...municipalityRoutes(productionDeps),
   ...contributionRoutes({ ...productionDeps, inspector: evidenceInspector }),
+  ...publicReadRoutes(productionDeps),
+  ...mediaRoutes(productionDeps),
+  ...contributionRoutes({
+    ...productionDeps,
+    inspector: failClosedInspector,
+    validationPorts: productionValidationPorts,
+  }),
+  ...communityRoutes(productionDeps),
 ];
 
 export function createHandler(routes: Route[]): (req: Request) => Promise<Response> {

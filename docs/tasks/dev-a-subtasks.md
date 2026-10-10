@@ -463,3 +463,49 @@ Los tests que no se puedan ejecutar por falta de entorno se reportan como SKIPPE
 | `waitUntil` cortado por límites de la plataforma | Medio | Reserva + versión + `retry` (T13.a/c); nunca aprobación optimista |
 | RPC expuestas por PostgREST | Alto | `revoke execute` en cada migración + test que llama la RPC con anon y espera error (en T01.c/T10.a) |
 | Retraso de C en T06/T09 | Medio | Puertos con fakes (T10.b, T13.b); T13.d se reporta BLOCKED si C no ha entregado |
+
+---
+
+## Operador: denuncias
+
+Las denuncias (`POST /reports`) quedan en `public.reports`, ilegible para anon y usuarios. El equipo las atiende desde la consola SQL de Supabase (rol `postgres`/service). No existe endpoint público de moderación. Ensayado en DEV el 2026-10-10 con datos de test (borrados después): listar, ocultar y comprobar que desaparece del feed.
+
+**1. Listar denuncias pendientes** (con la contribución y su estado):
+
+```sql
+select r.id as report_id, r.created_at, r.reason,
+       c.id as contribution_id, c.status, c.hidden_at, c.action_type, c.municipality_code
+from public.reports r
+join public.contributions c on c.id = r.contribution_id
+where r.reviewed_at is null
+order by r.created_at;
+```
+
+**2. Ocultar manualmente una contribución** y resolver todas sus denuncias pendientes (una sola sentencia, atómica). Sustituye `<contribution_id>`:
+
+```sql
+with hidden as (
+  update public.contributions
+     set hidden_at = now()
+   where id = '<contribution_id>'
+     and status = 'APPROVED' and hidden_at is null
+  returning id
+)
+update public.reports
+   set reviewed_at = now(), resolution = 'HIDDEN'
+ where contribution_id in (select id from hidden)
+   and reviewed_at is null
+returning id, reviewed_at, resolution;
+```
+
+Efecto (igual que `hide_contribution`, T19): sale del feed y deja de sumar puntos; `status`, `submitted_at` y `points_snapshot` no cambian, el cooldown se mantiene y la copia publicada no se borra. Si devuelve 0 filas, la contribución no estaba `APPROVED` visible: revisa el caso a mano.
+
+**3. Descartar una denuncia** sin ocultar nada:
+
+```sql
+update public.reports
+   set reviewed_at = now(), resolution = 'DISMISSED'
+ where id = '<report_id>' and reviewed_at is null;
+```
+
+**Secretos** (los configura el humano en los secretos de Edge Functions, nunca en el repo): `TURNSTILE_SECRET_KEY` y `REPORT_RATE_SALT`. Si falta alguno, `POST /reports` responde `500` (falla cerrado). Claves de prueba oficiales de Turnstile: <https://developers.cloudflare.com/turnstile/troubleshooting/testing/>.
