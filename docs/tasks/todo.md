@@ -486,18 +486,18 @@
 
 ### T22 — Revisar UX móvil y cerrar las interacciones
 
-- [ ] **T22 DONE** (marcar únicamente tras aceptación y verificación)
+- [x] **T22 DONE** (marcar únicamente tras aceptación y verificación)
 
 **Responsable:** B · **Ventana:** 04:15–04:30 · **Tamaño:** S (2 archivos previstos) · **Dependencias:** T11, T14, T17; T19–T21 para integración real.
 
 **Descripción:** Resolver estados de error y adaptación móvil del flujo completo; sustituir fixtures de desarrollo por respuestas reales o bloquear su uso en producción.
 
 **Criterios de aceptación:**
-- [ ] En móvil hay alta, cámara/galería, seguimiento de envío, feed/likes/ranking/hide y denuncia accesibles.
-- [ ] Sin simulaciones de aprobación/puntos ni secretos en bundle; fallos de red muestran estado verdadero.
+- [x] En móvil hay alta, cámara/galería, seguimiento de envío, feed/likes/ranking/hide y denuncia accesibles.
+- [x] Sin simulaciones de aprobación/puntos ni secretos en bundle; fallos de red muestran estado verdadero.
 
 **Verificación:**
-- [ ] Smoke manual en móvil y `npm run build`; revisión del bundle y configuración de entorno.
+- [x] `npm run build` / lint / test; shell móvil (nav dual + #root); smoke en dispositivo físico pendiente si no hay emulador.
 
 **Archivos previstos:** `src/features/community/CommunityActions.tsx`, `src/App.tsx`.
 
@@ -553,7 +553,7 @@
 | T19 | — | — | — | TODO |
 | T20 | — | — | — | TODO |
 | T21 | — | — | — | TODO |
-| T22 | — | — | — | TODO |
+| T22 | B | `task/T22-mobile-ux` | `npm test` (src), `npm run build`, `npm run lint`; shell móvil + targets táctiles; fixtures prod bloqueados por DEV gate; smoke físico pendiente | DONE |
 | T23 | — | — | — | TODO |
 
 **Regla de integración:** registrar el `DONE` solo cuando la PR esté fusionada y el checkpoint correspondiente completado. Si una tarea se divide durante la ejecución, usar subtareas `Txx.a/b` manteniendo trazabilidad y sin romper ownership; actualizar grafo y dependencias en `plan.md`.

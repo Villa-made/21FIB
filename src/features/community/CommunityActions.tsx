@@ -24,39 +24,52 @@ const row: CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
   gap: '0.5rem',
-  alignItems: 'center',
+  alignItems: 'stretch',
+  width: '100%',
 }
 
 const btn: CSSProperties = {
   border: '1px solid #d6d3d1',
   borderRadius: '0.5rem',
-  padding: '0.4rem 0.7rem',
+  padding: '0.55rem 0.85rem',
   background: '#fff',
   fontWeight: 600,
   cursor: 'pointer',
-  fontSize: '0.8rem',
+  fontSize: '0.875rem',
+  minHeight: '44px',
+  flex: '1 1 auto',
+  touchAction: 'manipulation',
+  boxSizing: 'border-box',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  textAlign: 'center',
 }
 
 const btnDanger: CSSProperties = { ...btn, borderColor: '#fca5a5', color: '#991b1b' }
 
-const hint: CSSProperties = { fontSize: '0.75rem', color: '#78716c', margin: 0, lineHeight: 1.4 }
+const hint: CSSProperties = { fontSize: '0.8rem', color: '#78716c', margin: 0, lineHeight: 1.4 }
 
 const errBox: CSSProperties = {
-  padding: '0.5rem 0.65rem',
+  padding: '0.65rem 0.75rem',
   borderRadius: '0.5rem',
   background: '#fef2f2',
   color: '#991b1b',
-  fontSize: '0.8rem',
+  fontSize: '0.875rem',
+  width: '100%',
+  boxSizing: 'border-box',
 }
 
 const panel: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.5rem',
-  padding: '0.65rem',
+  gap: '0.65rem',
+  padding: '0.75rem',
   borderRadius: '0.5rem',
   background: '#fafaf9',
   border: '1px solid #e7e5e4',
+  width: '100%',
+  boxSizing: 'border-box',
 }
 
 declare global {
@@ -294,13 +307,17 @@ export default function CommunityActions({
               style={{
                 border: '1px solid #d6d3d1',
                 borderRadius: '0.5rem',
-                padding: '0.5rem',
+                padding: '0.65rem',
                 fontFamily: 'inherit',
+                width: '100%',
+                boxSizing: 'border-box',
+                minHeight: '5rem',
+                fontSize: '1rem',
               }}
             />
           </label>
           <ReportTurnstile onToken={onCaptcha} resetKey={captchaKey} />
-          <button type="submit" style={btn} disabled={busy}>
+          <button type="submit" style={{ ...btn, width: '100%' }} disabled={busy}>
             {busy ? 'Enviando…' : 'Enviar denuncia'}
           </button>
         </form>
