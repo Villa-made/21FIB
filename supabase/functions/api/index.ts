@@ -14,6 +14,7 @@ import {
 import type { ValidationPorts } from './domain/validation-workflow.ts';
 import { communityRoutes } from './routes/community.ts';
 import { contributionRoutes } from './routes/contributions.ts';
+import { mediaRoutes } from './routes/media.ts';
 import { municipalityRoutes } from './routes/municipalities.ts';
 import { publicReadRoutes } from './routes/public-reads.ts';
 import { profileRoutes } from './routes/profiles.ts';
@@ -68,6 +69,7 @@ const productionRoutes: Route[] = [
   ...uploadRoutes(productionDeps),
   ...municipalityRoutes(productionDeps),
   ...publicReadRoutes(productionDeps),
+  ...mediaRoutes(productionDeps),
   ...contributionRoutes({
     ...productionDeps,
     inspector: failClosedInspector,
